@@ -31,7 +31,7 @@ namespace DistLockNet
             _appId = config.GetValue<string>("Locker.ApplicationId");
             _timeoutSeconds = config.GetValue<int>("Locker.TimeOutSeconds");
             _heartbeat = _timeoutSeconds / EXPIRATION_COUNT;
-            if (_heartbeat < 5)
+            if (_timeoutSeconds < 5)
             {
                 throw new LockerException("Timeout value is too small, should be greater than 5 seconds.");
             }

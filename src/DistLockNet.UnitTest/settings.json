@@ -1,6 +1,6 @@
 ﻿{
 	"Locker": {
 		"ApplicationId": "myApp",
-		"TimeOutSeconds": 10
+		"TimeOutSeconds": 5
 	}
 }
