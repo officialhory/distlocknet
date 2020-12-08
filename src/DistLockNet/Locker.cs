@@ -28,8 +28,8 @@ namespace DistLockNet
 
         public Locker(IConfiguration config, ILockingBnd bnd)
         {
-            _appId = config.GetValue<string>("Locker.ApplicationId");
-            _timeoutSeconds = config.GetValue<int>("Locker.TimeOutSeconds");
+            _appId = config.GetValue<string>("Locker:ApplicationId");
+            _timeoutSeconds = config.GetValue<int>("Locker:TimeOutSeconds");
             _heartbeat = _timeoutSeconds / EXPIRATION_COUNT;
             if (_timeoutSeconds < 5)
             {

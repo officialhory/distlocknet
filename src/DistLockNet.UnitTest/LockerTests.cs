@@ -1,3 +1,6 @@
+using System;
+using System.IO;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using DistLockNet.Interfaces;
@@ -19,14 +22,17 @@ namespace DistLockNet.UnitTest
 
         public LockerTests()
         {
-            var conf = new ConfigurationBuilder().SetBasePath("/")
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true).Build();
 
-            _lockingBnd = new Mock<ILockingBnd>().Object;
+            var conf = new ConfigurationBuilder()
+                .SetBasePath(Path.GetDirectoryName(Uri.UnescapeDataString((new UriBuilder(Assembly.GetExecutingAssembly().CodeBase)).Path)))
+                .AddJsonFile("settings.json", optional: true, reloadOnChange: true).Build();
+
+            _lockingBndMock = new Mock<ILockingBnd>();
+            _lockingBnd = _lockingBndMock.Object;
 
             _locker = new Locker(conf, _lockingBnd)
             {
-                OnLockAcquired = (str) => { _lockAq++; }, 
+                OnLockAcquired = (str) => { _lockAq++; },
                 OnLockLost = (str) => { _lockLost++; }
             };
         }
