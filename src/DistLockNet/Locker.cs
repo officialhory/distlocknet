@@ -13,8 +13,8 @@ namespace DistLockNet
         private readonly string _appId;
         private readonly ILockingBnd _bnd;
 
-        public Action<string> OnLockAcquired { get; }
-        public Action<string> OnLockLost { get; }
+        public Action<string> OnLockAcquired { get; set; }
+        public Action<string> OnLockLost { get; set; }
 
         private readonly CancellationTokenSource _ct;
         private readonly Guid _lockerId;
@@ -29,7 +29,7 @@ namespace DistLockNet
         public Locker(IConfiguration config, ILockingBnd bnd)
         {
             _appId = config.GetValue<string>("Locker.ApplicationId");
-            _timeoutSeconds = config.GetValue<int>("Locker.TimeoutSeconds");
+            _timeoutSeconds = config.GetValue<int>("Locker.TimeOutSeconds");
             _heartbeat = _timeoutSeconds / EXPIRATION_COUNT;
             if (_heartbeat < 5)
             {
