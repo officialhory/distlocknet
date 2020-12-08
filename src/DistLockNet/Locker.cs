@@ -22,7 +22,7 @@ namespace DistLockNet
         private readonly int _timeoutSeconds;
         private readonly int _heartbeat;
         private int _seedCounter = 0;
-        private int _failCounter;
+        private int _failCounter = 0;
 
         private const int EXPIRATION_COUNT = 5;
 
@@ -78,7 +78,7 @@ namespace DistLockNet
 
         public bool CheckLockExpired(LockingObject lo)
         {
-            if (_lo.AppId == lo.AppId && _lo.Seed == lo.Seed && _lo.LockerId == lo.LockerId)
+            if (_lo.Equals(lo))
             {
                 _seedCounter++;
                 return _seedCounter >= EXPIRATION_COUNT;
