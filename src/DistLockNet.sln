@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.30717.126
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistLockNet", "DistLockNet\DistLockNet.csproj", "{F15E8A29-67BC-445B-AA82-7C7ABB245836}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistLockNetPGBnd", "DistLockNetPGBnd\DistLockNetPGBnd.csproj", "{E3CAE507-1ADE-406C-80AF-F8F7AD799EFE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DistLockNet.SqlBackend", "DistLockNet.SqlBackend\DistLockNet.SqlBackend.csproj", "{A4255392-B60F-4A30-95E7-CA108535ABB7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{F15E8A29-67BC-445B-AA82-7C7ABB245836}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F15E8A29-67BC-445B-AA82-7C7ABB245836}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F15E8A29-67BC-445B-AA82-7C7ABB245836}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E3CAE507-1ADE-406C-80AF-F8F7AD799EFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E3CAE507-1ADE-406C-80AF-F8F7AD799EFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E3CAE507-1ADE-406C-80AF-F8F7AD799EFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E3CAE507-1ADE-406C-80AF-F8F7AD799EFE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A4255392-B60F-4A30-95E7-CA108535ABB7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4255392-B60F-4A30-95E7-CA108535ABB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4255392-B60F-4A30-95E7-CA108535ABB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4255392-B60F-4A30-95E7-CA108535ABB7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
