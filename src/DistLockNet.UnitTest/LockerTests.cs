@@ -1,25 +1,24 @@
-using System;
-using System.IO;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
+using DistLockNet.Exceptions;
 using DistLockNet.Interfaces;
 using DistLockNet.Models;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Moq;
+using System;
+using System.IO;
+using System.Reflection;
+using System.Threading;
 using Xunit;
 
 namespace DistLockNet.UnitTest
 {
     public class LockerTests
     {
-        private Locker _locker;
-        private ILockingBnd _lockingBnd;
-        private Mock<ILockingBnd> _lockingBndMock;
-
-        ManualResetEvent _aq = new ManualResetEvent(false);
-        ManualResetEvent _lo = new ManualResetEvent(false);
+        private readonly Locker _locker;
+        private readonly ILockingBnd _lockingBnd;
+        private readonly Mock<ILockingBnd> _lockingBndMock;
+        private readonly ManualResetEvent _aq = new ManualResetEvent(false);
+        private readonly ManualResetEvent _lo = new ManualResetEvent(false);
         private int _lockAq = 0;
         private int _lockLost = 0;
 
@@ -40,7 +39,11 @@ namespace DistLockNet.UnitTest
                     _lockAq++;
                     _aq.Set();
                 },
-                OnLockLost = (str) => { _lo.Set(); }
+                OnLockLost = (str) =>
+                {
+                    _lockLost++;
+                    _lo.Set();
+                }
             };
         }
 
@@ -53,7 +56,7 @@ namespace DistLockNet.UnitTest
         }
 
         [Fact(DisplayName = "No Locking Object in Bnd, lock successfully")]
-        public async Task NoLockingObject_TryToLock_Success()
+        public void NoLockingObject_TryToLock_Success()
         {
             Reset();
 
@@ -70,6 +73,121 @@ namespace DistLockNet.UnitTest
             _locker.Halt();
 
             _lockAq.Should().Be(1);
+        }
+
+        [Fact(DisplayName = "No Locking Object in Bnd, fail to lock")]
+        public void NoLockingObject_TryToLock_Fail()
+        {
+            Reset();
+
+            _lockingBndMock.Setup(l => l.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((LockingObject)null);
+
+            _lockingBndMock.Setup(l => l.AddAsync(It.IsAny<LockingObject>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(false);
+
+            _locker.Lock();
+
+            _aq.WaitOne(2000);
+
+            _locker.Halt();
+
+            _lockAq.Should().Be(0);
+        }
+
+        [Fact(DisplayName = "No Locking Object exists, fail to update in heartbeat")]
+        public void NoLockingObject_CantUpdateHeartbeat_Fail()
+        {
+            Reset();
+
+            _lockingBndMock.Setup(l => l.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((LockingObject)null);
+            _lockingBndMock.Setup(l => l.AddAsync(It.IsAny<LockingObject>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true);
+            _lockingBndMock.SetupSequence(l => l.UpdateAsync(It.IsAny<LockingObject>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(false)
+                .ReturnsAsync(false)
+                .ReturnsAsync(false)
+                .ReturnsAsync(false)
+                .ReturnsAsync(false);
+
+            _locker.Lock();
+
+            _aq.WaitOne(2000);
+            _lo.WaitOne(2000);
+
+            _locker.Halt();
+
+            _lockAq.Should().Be(1);
+            _lockLost.Should().Be(1);
+        }
+
+        [Fact(DisplayName = "Locking Object exists, lock successful")]
+        public void LockingObject_TryToLock_Success()
+        {
+            Reset();
+
+            _lockingBndMock.Setup(l => l.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new LockingObject
+                {
+                    AppId = "myApp",
+                    Seed = Guid.NewGuid(),
+                    LockerId = Guid.NewGuid()
+                });
+
+            _lockingBndMock.Setup(l => l.UpdateAsync(It.IsAny<LockingObject>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true);
+
+            _locker.Lock();
+
+            _aq.WaitOne(2000);
+
+            _locker.Halt();
+
+            _lockAq.Should().Be(1);
+        }
+
+        [Fact(DisplayName = "Locking Object exists, fail to update in heartbeat")]
+        public void LockingObject_CantUpdateHeartbeat_Fail()
+        {
+            Reset();
+
+            _lockingBndMock.Setup(l => l.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new LockingObject
+                {
+                    AppId = "myApp",
+                    Seed = Guid.NewGuid(),
+                    LockerId = Guid.NewGuid()
+                });
+            _lockingBndMock.SetupSequence(l => l.UpdateAsync(It.IsAny<LockingObject>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true)
+                .ReturnsAsync(false)
+                .ReturnsAsync(false)
+                .ReturnsAsync(false)
+                .ReturnsAsync(false)
+                .ReturnsAsync(false);
+
+            _locker.Lock();
+            
+            _aq.WaitOne(2000);
+            _lo.WaitOne(2000);
+
+            _locker.Halt();
+
+            _lockAq.Should().Be(1);
+            _lockLost.Should().Be(1);
+        }
+
+        [Fact(DisplayName = "Wrong timeout value")]
+        public void WrongTimeoutValue_Exception()
+        {
+            var conf = new ConfigurationBuilder()
+                .SetBasePath(Path.GetDirectoryName(Uri.UnescapeDataString((new UriBuilder(Assembly.GetExecutingAssembly().CodeBase)).Path)))
+                .AddJsonFile("wrong_settings.json", optional: true, reloadOnChange: true).Build();
+
+            Action action = () => new Locker(conf, _lockingBnd);
+
+            action.Should().Throw<LockerException>();
         }
     }
 }
