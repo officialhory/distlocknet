@@ -1,10 +1,9 @@
 ﻿using DistLockNet.Interfaces;
 using DistLockNet.Models;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
-using Npgsql.Replication.PgOutput.Messages;
 
 namespace DistLockNetPGBnd
 {
