@@ -1,9 +1,8 @@
-using System;
 using Xunit;
 
 namespace DistLockNet.UnitTest
 {
-    public class UnitTest1
+    public class LockerTests
     {
         [Fact]
         public void Test1()
