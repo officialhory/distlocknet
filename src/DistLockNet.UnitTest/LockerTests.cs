@@ -17,6 +17,9 @@ namespace DistLockNet.UnitTest
         private Locker _locker;
         private ILockingBnd _lockingBnd;
         private Mock<ILockingBnd> _lockingBndMock;
+
+        ManualResetEvent _aq = new ManualResetEvent(false);
+        ManualResetEvent _lo = new ManualResetEvent(false);
         private int _lockAq = 0;
         private int _lockLost = 0;
 
@@ -32,13 +35,19 @@ namespace DistLockNet.UnitTest
 
             _locker = new Locker(conf, _lockingBnd)
             {
-                OnLockAcquired = (str) => { _lockAq++; },
-                OnLockLost = (str) => { _lockLost++; }
+                OnLockAcquired = (str) =>
+                {
+                    _lockAq++;
+                    _aq.Set();
+                },
+                OnLockLost = (str) => { _lo.Set(); }
             };
         }
 
-        private void ResetCallOutCounters()
+        private void Reset()
         {
+            _aq.Reset();
+            _lo.Reset();
             _lockAq = 0;
             _lockLost = 0;
         }
@@ -46,7 +55,7 @@ namespace DistLockNet.UnitTest
         [Fact(DisplayName = "No Locking Object in Bnd, lock successfully")]
         public async Task NoLockingObject_TryToLoack_Success()
         {
-            ResetCallOutCounters();
+            Reset();
 
             _lockingBndMock.Setup(l => l.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((LockingObject)null);
@@ -56,7 +65,7 @@ namespace DistLockNet.UnitTest
 
             _locker.Lock();
 
-            await Task.Delay(2000);
+            _aq.WaitOne(2000);
 
             _locker.Halt();
 
