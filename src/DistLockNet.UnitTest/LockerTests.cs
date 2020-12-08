@@ -53,7 +53,7 @@ namespace DistLockNet.UnitTest
         }
 
         [Fact(DisplayName = "No Locking Object in Bnd, lock successfully")]
-        public async Task NoLockingObject_TryToLoack_Success()
+        public async Task NoLockingObject_TryToLock_Success()
         {
             Reset();
 
