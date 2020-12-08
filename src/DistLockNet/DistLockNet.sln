@@ -5,9 +5,11 @@ VisualStudioVersion = 16.0.30717.126
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistLockNet", "DistLockNet.csproj", "{C9E8B992-7069-4477-9CD5-B29C4880D319}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DistLockNetPGBnd", "..\DistLockNetPGBnd\DistLockNetPGBnd.csproj", "{FE0CDFB2-1DCD-4B51-BBB5-E6FFE084F71B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistLockNetPGBnd", "..\DistLockNetPGBnd\DistLockNetPGBnd.csproj", "{FE0CDFB2-1DCD-4B51-BBB5-E6FFE084F71B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DistLockNetRedisBnd", "..\DistLockNetRedisBnd\DistLockNetRedisBnd.csproj", "{D7942AF7-70D7-43FC-8DA4-22B1D40F0564}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistLockNetRedisBnd", "..\DistLockNetRedisBnd\DistLockNetRedisBnd.csproj", "{D7942AF7-70D7-43FC-8DA4-22B1D40F0564}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DistLockNet.UnitTest", "..\DistLockNet.UnitTest\DistLockNet.UnitTest.csproj", "{0FB7245D-527E-4765-A268-AD8CC99E00A0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{D7942AF7-70D7-43FC-8DA4-22B1D40F0564}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D7942AF7-70D7-43FC-8DA4-22B1D40F0564}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D7942AF7-70D7-43FC-8DA4-22B1D40F0564}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0FB7245D-527E-4765-A268-AD8CC99E00A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0FB7245D-527E-4765-A268-AD8CC99E00A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0FB7245D-527E-4765-A268-AD8CC99E00A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0FB7245D-527E-4765-A268-AD8CC99E00A0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

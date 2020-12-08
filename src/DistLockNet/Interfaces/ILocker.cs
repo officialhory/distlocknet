@@ -1,12 +1,12 @@
-﻿using DistLockNet.Models;
-using System;
-using System.Threading.Tasks;
+﻿using System;
 
 namespace DistLockNet.Interfaces
 {
     public interface ILocker
     {
-        Task LockAsync();
+        void Lock();
+
+        void Halt();
 
         Action<string> OnLockAcquired { get; }
 

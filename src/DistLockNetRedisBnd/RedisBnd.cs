@@ -1,7 +1,7 @@
-﻿using System;
-using System.Threading.Tasks;
-using DistLockNet.Interfaces;
+﻿using DistLockNet.Interfaces;
 using DistLockNet.Models;
+using System;
+using System.Threading.Tasks;
 
 namespace DistLockNetRedisBnd
 {

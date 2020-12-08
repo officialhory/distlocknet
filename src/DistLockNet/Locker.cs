@@ -1,27 +1,132 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
+﻿using DistLockNet.Exceptions;
 using DistLockNet.Interfaces;
+using DistLockNet.Models;
+using Microsoft.Extensions.Configuration;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace DistLockNet
 {
-    public class Locker: ILocker
+    public class Locker : ILocker
     {
         private readonly string _appId;
+        private readonly ILockingBnd _bnd;
 
         public Action<string> OnLockAcquired { get; }
         public Action<string> OnLockLost { get; }
 
-        public Locker(string appId)
+        private readonly CancellationTokenSource _ct;
+        private readonly Guid _lockerId;
+        private LockingObject _lo;
+        private readonly int _timeoutSeconds;
+        private readonly int _heartbeat;
+        private int _seedCounter = 0;
+        private int _failCounter;
+
+        private const int EXPIRATION_COUNT = 5;
+
+        public Locker(IConfiguration config, ILockingBnd bnd)
         {
-            _appId = appId;
+            _appId = config.GetValue<string>("Locker.ApplicationId");
+            _timeoutSeconds = config.GetValue<int>("Locker.TimeoutSeconds");
+            _heartbeat = _timeoutSeconds / EXPIRATION_COUNT;
+            if (_heartbeat < 5)
+            {
+                throw new LockerException("Timeout value is too small, should be greater than 5 seconds.");
+            }
+            _bnd = bnd;
+            _ct = new CancellationTokenSource();
+            _lockerId = Guid.NewGuid();
         }
 
-        public async Task LockAsync()
+        public void Lock()
         {
-            throw new NotImplementedException();
+            Task.Run(async () =>
+            {
+                var lo = await _bnd.GetAsync(_appId, _ct.Token);
+                if (lo == null)
+                {
+                    _lo = LockingObjectFactory();
+
+                    if (await _bnd.AddAsync(_lo, _ct.Token))
+                    {
+                        StartHeartbeat();
+                        OnLockAcquired?.Invoke(_appId);
+                        return;
+                    }
+                }
+                while (!_ct.IsCancellationRequested)
+                {
+                    lo = await _bnd.GetAsync(_appId, _ct.Token);
+                    if (CheckLockExpired(lo))
+                    {
+                        _lo = LockingObjectFactory();
+
+                        if (await _bnd.UpdateAsync(_lo, _ct.Token))
+                        {
+                            StartHeartbeat();
+                            OnLockAcquired?.Invoke(_appId);
+                            return;
+                        }
+                    }
+
+                    await Task.Delay(_timeoutSeconds);
+                }
+            }, _ct.Token);
         }
-      
+
+        public bool CheckLockExpired(LockingObject lo)
+        {
+            if (_lo.AppId == lo.AppId && _lo.Seed == lo.Seed && _lo.LockerId == lo.LockerId)
+            {
+                _seedCounter++;
+                return _seedCounter >= EXPIRATION_COUNT;
+            }
+
+            _lo = lo;
+            _seedCounter = 0;
+            return false;
+        }
+
+        private void StartHeartbeat()
+        {
+            Task.Run(async () =>
+            {
+                while (!_ct.Token.IsCancellationRequested)
+                {
+                    await Task.Delay(_heartbeat);
+
+                    if (await _bnd.UpdateAsync(LockingObjectFactory(), _ct.Token))
+                    {
+                        _failCounter = 0;
+                    }
+                    else
+                    {
+                        _failCounter++;
+                        if (_failCounter >= EXPIRATION_COUNT)
+                        {
+                            OnLockLost?.Invoke(_appId);
+                            return;
+                        }
+                    }
+                }
+            }, _ct.Token);
+        }
+
+        public void Halt()
+        {
+            _ct.Cancel();
+        }
+
+        private LockingObject LockingObjectFactory()
+        {
+            return new LockingObject
+            {
+                AppId = _appId,
+                Seed = Guid.NewGuid(),
+                LockerId = _lockerId
+            };
+        }
     }
 }

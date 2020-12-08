@@ -1,13 +1,13 @@
-﻿using System;
+﻿using DistLockNet.Models;
+using System.Threading;
 using System.Threading.Tasks;
-using DistLockNet.Models;
 
 namespace DistLockNet.Interfaces
 {
     public interface ILockingBnd
     {
-        Task<LockingObject> GetAsync(string application);
-        Task<bool> AddAsync(string application, Guid lockerId, Guid seed);
-        Task<bool> UpdateAsync(string application, Guid lockerId, Guid seed);
+        Task<LockingObject> GetAsync(string application, CancellationToken ct);
+        Task<bool> AddAsync(LockingObject lo, CancellationToken ct);
+        Task<bool> UpdateAsync(LockingObject lo, CancellationToken ct);
     }
 }

@@ -4,8 +4,8 @@ namespace DistLockNet.Models
 {
     public class LockingObject
     {
-        public Guid Id { get; set; }
-        public Guid LockId { get; set; }
-        public string InstanceId { get; set; }
+        public string AppId { get; set; }
+        public Guid LockerId { get; set; }
+        public Guid Seed { get; set; }
     }
 }
