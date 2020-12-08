@@ -58,6 +58,8 @@ namespace DistLockNet.UnitTest
 
             await Task.Delay(2000);
 
+            _locker.Halt();
+
             _lockAq.Should().Be(1);
         }
     }
