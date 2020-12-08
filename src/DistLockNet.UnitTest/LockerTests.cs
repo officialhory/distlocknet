@@ -43,13 +43,16 @@ namespace DistLockNet.UnitTest
             _lockLost = 0;
         }
 
-        [Fact]
-        public async Task Test1()
+        [Fact(DisplayName = "No Locking Object in Bnd, lock successfully")]
+        public async Task NoLockingObject_TryToLoack_Success()
         {
             ResetCallOutCounters();
 
             _lockingBndMock.Setup(l => l.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((LockingObject)null);
+
+            _lockingBndMock.Setup(l => l.AddAsync(It.IsAny<LockingObject>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true);
 
             _locker.Lock();
 
