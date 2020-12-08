@@ -19,9 +19,11 @@ namespace DistLockNet.UnitTest
 
             _lockingBnd = new Mock<ILockingBnd>().Object;
 
-            _locker = new Locker(conf, _lockingBnd);
-            _locker.OnLockAcquired = (str) => { _lockAq++; };
-            _locker.OnLockLost = (str) => { _lockLost++; };
+            _locker = new Locker(conf, _lockingBnd)
+            {
+                OnLockAcquired = (str) => { _lockAq++; }, 
+                OnLockLost = (str) => { _lockLost++; }
+            };
         }
 
         private void ResetCallOutCounters()
