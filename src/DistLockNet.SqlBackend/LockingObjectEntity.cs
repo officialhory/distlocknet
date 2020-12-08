@@ -3,7 +3,7 @@ using System;
 
 namespace DistLockNet.SqlBackend
 {
-    public class LockObjectEntity : Entity
+    public class LockingObjectEntity : Entity
     {
         public virtual string AppId { get; set; }
         public virtual Guid LockerId { get; set; }
