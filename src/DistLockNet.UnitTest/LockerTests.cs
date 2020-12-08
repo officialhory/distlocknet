@@ -55,7 +55,7 @@ namespace DistLockNet.UnitTest
             _lockLost = 0;
         }
 
-        [Fact(DisplayName = "No Locking Object in Bnd, lock successfully")]
+        [Fact(DisplayName = "No Locking Object exists, lock successfully")]
         public void NoLockingObject_TryToLock_Success()
         {
             Reset();
@@ -75,7 +75,7 @@ namespace DistLockNet.UnitTest
             _lockAq.Should().Be(1);
         }
 
-        [Fact(DisplayName = "No Locking Object in Bnd, fail to lock")]
+        [Fact(DisplayName = "No Locking Object exists, fail to lock")]
         public void NoLockingObject_TryToLock_Fail()
         {
             Reset();
@@ -104,11 +104,7 @@ namespace DistLockNet.UnitTest
                 .ReturnsAsync((LockingObject)null);
             _lockingBndMock.Setup(l => l.AddAsync(It.IsAny<LockingObject>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(true);
-            _lockingBndMock.SetupSequence(l => l.UpdateAsync(It.IsAny<LockingObject>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(false)
-                .ReturnsAsync(false)
-                .ReturnsAsync(false)
-                .ReturnsAsync(false)
+            _lockingBndMock.Setup(l => l.UpdateAsync(It.IsAny<LockingObject>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(false);
 
             _locker.Lock();
@@ -145,6 +141,30 @@ namespace DistLockNet.UnitTest
             _locker.Halt();
 
             _lockAq.Should().Be(1);
+        }
+
+        [Fact(DisplayName = "Locking Object exists, fail to lock")]
+        public void LockingObject_TryToLock_Fail()
+        {
+            Reset();
+
+            _lockingBndMock.Setup(l => l.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new LockingObject
+                {
+                    AppId = "myApp",
+                    Seed = Guid.NewGuid(),
+                    LockerId = Guid.NewGuid()
+                });
+            _lockingBndMock.Setup(l => l.UpdateAsync(It.IsAny<LockingObject>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(false);
+
+            _locker.Lock();
+
+            _aq.WaitOne(2000);
+
+            _locker.Halt();
+
+            _lockAq.Should().Be(0);
         }
 
         [Fact(DisplayName = "Locking Object exists, fail to update in heartbeat")]
