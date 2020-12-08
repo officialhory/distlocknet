@@ -56,6 +56,7 @@ namespace DistLockNet
                         return;
                     }
                 }
+
                 while (!_ct.IsCancellationRequested)
                 {
                     lo = await _bnd.GetAsync(_appId, _ct.Token);
@@ -71,7 +72,7 @@ namespace DistLockNet
                         }
                     }
 
-                    await Task.Delay(_timeoutSeconds);
+                    await Task.Delay(_heartbeat);
                 }
             }, _ct.Token);
         }
