@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistLockNet.UnitTest", "..\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistLockNet.SqlBackend", "..\DistLockNet.SqlBackend\DistLockNet.SqlBackend.csproj", "{CE2F25F5-C0EC-4747-B8FA-9F639D6C9CD1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DistLockNet.RedisBackend", "..\DistLockNet.RedisBackend\DistLockNet.RedisBackend.csproj", "{BD83C8C0-72F0-4973-A406-933845459324}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistLockNet.RedisBackend", "..\DistLockNet.RedisBackend\DistLockNet.RedisBackend.csproj", "{BD83C8C0-72F0-4973-A406-933845459324}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DistLockTestConsole", "..\DistLockTestConsole\DistLockTestConsole.csproj", "{90E79075-FFCA-4AC6-B861-00715F783724}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{BD83C8C0-72F0-4973-A406-933845459324}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BD83C8C0-72F0-4973-A406-933845459324}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BD83C8C0-72F0-4973-A406-933845459324}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90E79075-FFCA-4AC6-B861-00715F783724}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90E79075-FFCA-4AC6-B861-00715F783724}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90E79075-FFCA-4AC6-B861-00715F783724}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90E79075-FFCA-4AC6-B861-00715F783724}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
