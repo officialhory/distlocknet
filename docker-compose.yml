@@ -30,7 +30,7 @@ services:
     image: pgadmin
     container_name: pgadmin
     restart: on-failure
-    build: ./configs/postgres
+    build: ./configs/pgadmin
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin
       - PGADMIN_DEFAULT_PASSWORD=admin
