@@ -1,16 +1,16 @@
-﻿using System;
-using System.IO;
-using System.Reflection;
-using DistLockNet;
+﻿using DistLockNet;
 using DistLockNet.SqlBackend;
 using Microsoft.Extensions.Configuration;
 using Serilog;
+using System;
+using System.IO;
+using System.Reflection;
 
 namespace DistLockTestConsole
 {
-    class Program
+    public class Program
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             Console.WriteLine($"App-{Guid.NewGuid()} Started.");
 
@@ -24,11 +24,14 @@ namespace DistLockTestConsole
 
             var bnd = new SqlBackend(conf, logger);
 
-            var locker = new Locker(conf, bnd);
+            var locker = new Locker(conf, bnd)
+            {
+                OnLockFail = (str) => logger.Debug($"Lock Fail: {str}"),
+                OnLockLost = (str) => logger.Debug($"Lock Lost: {str}"),
+                OnLockAcquired = (str) => logger.Debug($"Lock Acquired: {str}")
+            };
+            
 
-            locker.OnLockFail = (str) => logger.Debug($"Lock Fail: {str}");
-            locker.OnLockLost = (str) => logger.Debug($"Lock Lost: {str}");
-            locker.OnLockAcquired = (str) => logger.Debug($"Lock Acquired: {str}");
         }
     }
 }
