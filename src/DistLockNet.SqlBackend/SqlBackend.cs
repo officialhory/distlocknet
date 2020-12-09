@@ -9,7 +9,6 @@ using NHibernate.Linq;
 using NHibernate.Tool.hbm2ddl;
 using Serilog;
 using System;
-using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
