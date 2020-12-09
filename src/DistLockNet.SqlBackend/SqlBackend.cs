@@ -9,13 +9,14 @@ using NHibernate.Linq;
 using NHibernate.Tool.hbm2ddl;
 using Serilog;
 using System;
+using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace DistLockNet.SqlBackend
 {
-    public class SqlBackend: ILockingBnd
+    public class SqlBackend : ILockingBnd
     {
         private readonly ILogger _logger;
         private readonly string _connectionString;
@@ -31,22 +32,15 @@ namespace DistLockNet.SqlBackend
         public async Task<LockingObject> GetAsync(string application, CancellationToken ct)
         {
 
-            // return null if any issue
             try
             {
-                await ExecuteTransactionAsync(session =>
+                LockingObjectEntity loe = null;
+                await ExecuteTransactionAsync(async session =>
                 {
-                    Func<IQueryable<LockingObjectEntity>, CancellationToken, Task<LockingObjectEntity>> q = async (bq, cancellationToken) =>
-                    {
-                        var r = await bq.Where(x => x.AppId == application).SingleOrDefaultAsync(cancellationToken);
-                        return r;
-                    };
-                    var aa = session.Query<LockingObjectEntity>();
-                    var res = q.Invoke(aa, ct).Result;
-                    // Should be mapped
-                    return res;
-
+                    loe = await session.Query<LockingObjectEntity>().Where(i => i.AppId == application).FirstOrDefaultAsync(ct);
                 }, ct);
+
+                return new LockingObject(loe.AppId, loe.LockerId, loe.Seed);
             }
             catch
             {
@@ -54,17 +48,54 @@ namespace DistLockNet.SqlBackend
             }
         }
 
-        public Task<bool> AddAsync(LockingObject lo, CancellationToken ct)
+        public async Task<bool> AddAsync(LockingObject lo, CancellationToken ct)
         {
-            throw new NotImplementedException();
+            try
+            {
+                await ExecuteTransactionAsync(async session =>
+                {
+                    await session.SaveAsync(new LockingObjectEntity
+                    {
+                        AppId = lo.AppId,
+                        LockerId = lo.LockerId,
+                        Seed = lo.Seed
+                    }, ct);
+
+                }, ct);
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
-        public Task<bool> UpdateAsync(LockingObject lo, CancellationToken ct)
+        public async Task<bool> UpdateAsync(LockingObject lo, CancellationToken ct)
         {
-            throw new NotImplementedException();
+            try
+            {
+                await ExecuteTransactionAsync(async session =>
+                {
+                    var loe = await session.Query<LockingObjectEntity>().Where(i => i.AppId == lo.AppId && i.LockerId == lo.LockerId).FirstOrDefaultAsync(ct);
+                    if (loe == null)
+                    {
+                        throw new NullReferenceException($"LockingObjectEntity does not exist: {lo.AppId}, {lo.LockerId}");
+                    }
+
+                    loe.Seed = lo.Seed;
+                    await session.SaveAsync(loe, ct);
+                }, ct);
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
-                private Configuration DatabaseConfiguration(string dbType)
+        private Configuration DatabaseConfiguration(string dbType)
         {
             var cfg = Fluently.Configure();
 
@@ -110,6 +141,8 @@ namespace DistLockNet.SqlBackend
                     _logger.Error("Error happened during the transaction");
                     session.Clear();
                     await transaction.RollbackAsync(ct);
+
+                    throw;
                 }
 
                 session.Close();
@@ -117,8 +150,8 @@ namespace DistLockNet.SqlBackend
             catch (Exception)
             {
                 _logger.Error("Error happened during the session operation");
+                throw;
             }
-
         }
     }
 }
