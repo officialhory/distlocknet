@@ -28,6 +28,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="wrong_settings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="settings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

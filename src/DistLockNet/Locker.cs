@@ -15,11 +15,11 @@ namespace DistLockNet
 
         public Action<string> OnLockAcquired { get; set; }
         public Action<string> OnLockLost { get; set; }
+        public Action<string> OnLockFail { get; set; }
 
         private readonly CancellationTokenSource _ct;
         private readonly Guid _lockerId;
         private LockingObject _lo;
-        private readonly int _timeoutSeconds;
         private readonly int _heartbeat;
         private int _seedCounter = 0;
         private int _failCounter = 0;
@@ -29,9 +29,9 @@ namespace DistLockNet
         public Locker(IConfiguration config, ILockingBnd bnd)
         {
             _appId = config.GetValue<string>("Locker:ApplicationId");
-            _timeoutSeconds = config.GetValue<int>("Locker:TimeOutSeconds");
-            _heartbeat = _timeoutSeconds / EXPIRATION_COUNT;
-            if (_timeoutSeconds < 5)
+            var timeoutSeconds = config.GetValue<int>("Locker:TimeOutSeconds");
+            _heartbeat = timeoutSeconds / EXPIRATION_COUNT;
+            if (timeoutSeconds < 5)
             {
                 throw new LockerException("Timeout value is too small, should be greater than 5 seconds.");
             }
@@ -44,34 +44,39 @@ namespace DistLockNet
         {
             Task.Run(async () =>
             {
-                var lo = await _bnd.GetAsync(_appId, _ct.Token);
-                if (lo == null)
+                _lo = await _bnd.GetAsync(_appId, _ct.Token);
+                if (_lo == null)
                 {
                     _lo = LockingObjectFactory();
 
                     if (await _bnd.AddAsync(_lo, _ct.Token))
                     {
-                        StartHeartbeat();
                         OnLockAcquired?.Invoke(_appId);
+                        StartHeartbeat();
                         return;
                     }
+
+                    OnLockFail?.Invoke(_appId);
                 }
+
                 while (!_ct.IsCancellationRequested)
                 {
-                    lo = await _bnd.GetAsync(_appId, _ct.Token);
+                    var lo = await _bnd.GetAsync(_appId, _ct.Token);
                     if (CheckLockExpired(lo))
                     {
                         _lo = LockingObjectFactory();
 
                         if (await _bnd.UpdateAsync(_lo, _ct.Token))
                         {
-                            StartHeartbeat();
                             OnLockAcquired?.Invoke(_appId);
+                            StartHeartbeat();
                             return;
                         }
+
+                        OnLockFail?.Invoke(_appId);
                     }
 
-                    await Task.Delay(_timeoutSeconds);
+                    await Task.Delay(_heartbeat);
                 }
             }, _ct.Token);
         }
@@ -104,6 +109,9 @@ namespace DistLockNet
                     else
                     {
                         _failCounter++;
+
+                        OnLockFail?.Invoke(_appId);
+
                         if (_failCounter >= EXPIRATION_COUNT)
                         {
                             OnLockLost?.Invoke(_appId);

@@ -8,6 +8,8 @@ namespace DistLockNet.Interfaces
 
         Action<string> OnLockLost { get; set; }
 
+        Action<string> OnLockFail { get; set; }
+
         void Lock();
 
         void Halt();
