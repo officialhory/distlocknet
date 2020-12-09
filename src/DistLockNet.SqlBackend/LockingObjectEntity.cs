@@ -8,5 +8,6 @@ namespace DistLockNet.SqlBackend
         public virtual string AppId { get; set; }
         public virtual Guid LockerId { get; set; }
         public virtual Guid Seed { get; set; }
+        public virtual long Version { get; set; }
     }
 }

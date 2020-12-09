@@ -22,6 +22,11 @@ namespace DistLockNet.Models
 
         protected bool Equals(LockingObject other)
         {
+            if (other == null)
+            {
+                return false;
+            }
+
             return AppId == other.AppId && LockerId.Equals(other.LockerId) && Seed.Equals(other.Seed);
         }
 

@@ -7,6 +7,7 @@ namespace DistLockNet.SqlBackend
         public LockingObjectMap()
         {
             Table("distlocks");
+            Version(x => x.Version);
             Id(x => x.AppId);
             Map(x => x.LockerId);
             Map(x => x.Seed);

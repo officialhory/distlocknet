@@ -1,4 +1,4 @@
-﻿using DistLockNet.Interfaces;
+using DistLockNet.Interfaces;
 using DistLockNet.Models;
 using FluentNHibernate.Cfg;
 using FluentNHibernate.Cfg.Db;
@@ -41,8 +41,9 @@ namespace DistLockNet.SqlBackend
 
                 return new LockingObject(loe.AppId, loe.LockerId, loe.Seed);
             }
-            catch
+            catch(Exception ex)
             {
+                _logger.Error($"{ex.Message}");
                 return null;
             }
         }
@@ -76,12 +77,16 @@ namespace DistLockNet.SqlBackend
             {
                 await ExecuteTransactionAsync(async session =>
                 {
-                    var loe = await session.Query<LockingObjectEntity>().Where(i => i.AppId == lo.AppId && i.LockerId == lo.LockerId).FirstOrDefaultAsync(ct);
+                    var loe = await session.Query<LockingObjectEntity>().Where(i => i.AppId == lo.AppId).FirstOrDefaultAsync(ct);
                     if (loe == null)
                     {
                         throw new NullReferenceException($"LockingObjectEntity does not exist: {lo.AppId}, {lo.LockerId}");
                     }
 
+                    /* UPDATE distlock SET lockerId = lo.LockerId, seed = lo.seed WHERE appId = loe.AppId AND lockerId = loe.LockerId;*/
+                    
+
+                    loe.LockerId = lo.LockerId;
                     loe.Seed = lo.Seed;
                     await session.SaveAsync(loe, ct);
                 }, ct);
