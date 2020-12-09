@@ -8,6 +8,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Threading;
+using Serilog;
 using Xunit;
 
 namespace DistLockNet.UnitTest
@@ -24,6 +25,7 @@ namespace DistLockNet.UnitTest
         private int _lockAq = 0;
         private int _lockLost = 0;
         private int _lockFail = 0;
+        private readonly ILogger _logger;
 
         public LockerTests()
         {
@@ -35,7 +37,9 @@ namespace DistLockNet.UnitTest
             _lockingBndMock = new Mock<ILockingBnd>();
             _lockingBnd = _lockingBndMock.Object;
 
-            _locker = new Locker(conf, _lockingBnd)
+            _logger = new Mock<ILogger>().Object;
+
+            _locker = new Locker(conf, _lockingBnd, _logger)
             {
                 OnLockAcquired = (str) =>
                 {
@@ -216,7 +220,7 @@ namespace DistLockNet.UnitTest
                 .SetBasePath(Path.GetDirectoryName(Uri.UnescapeDataString((new UriBuilder(Assembly.GetExecutingAssembly().CodeBase)).Path)))
                 .AddJsonFile("wrong_settings.json", optional: true, reloadOnChange: true).Build();
 
-            Action action = () => new Locker(conf, _lockingBnd);
+            Action action = () => new Locker(conf, _lockingBnd, _logger);
 
             action.Should().Throw<LockerException>();
         }

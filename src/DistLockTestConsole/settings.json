@@ -1,7 +1,7 @@
 ﻿{
   "Locker": {
 		"ApplicationId": "myApp",
-		"TimeOutSeconds": 5,
+		"TimeOutSeconds": 10,
 		"ConnectionString": "Host=localhost; Port=5432; Database=locker; Username=admin; Password=admin; Pooling=true",
 		"Type": "postgres"
 	}

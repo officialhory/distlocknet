@@ -12,6 +12,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using DistLockNet.SqlBackend.Exception;
 
 namespace DistLockNet.SqlBackend
 {
@@ -43,7 +44,7 @@ namespace DistLockNet.SqlBackend
             }
             catch(Exception ex)
             {
-                _logger.Error($"{ex.Message}");
+                _logger.Error($"{ex}");
                 return null;
             }
         }
@@ -71,7 +72,7 @@ namespace DistLockNet.SqlBackend
             }
         }
 
-        public async Task<bool> UpdateAsync(LockingObject lo, CancellationToken ct)
+        public async Task<bool> AllocateAsync(LockingObject lo, CancellationToken ct)
         {
             try
             {
@@ -80,11 +81,33 @@ namespace DistLockNet.SqlBackend
                     var loe = await session.Query<LockingObjectEntity>().Where(i => i.AppId == lo.AppId).FirstOrDefaultAsync(ct);
                     if (loe == null)
                     {
-                        throw new NullReferenceException($"LockingObjectEntity does not exist: {lo.AppId}, {lo.LockerId}");
+                        throw new SqlBackendException($"LockingObjectEntity does not exist: {lo.AppId}, {lo.LockerId}");
                     }
 
-                    /* UPDATE distlock SET lockerId = lo.LockerId, seed = lo.seed WHERE appId = loe.AppId AND lockerId = loe.LockerId;*/
-                    
+                    loe.LockerId = lo.LockerId;
+                    loe.Seed = lo.Seed;
+                    await session.SaveAsync(loe, ct);
+                }, ct);
+
+                return true;
+            }
+            catch (SqlBackendException ex)
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateAsync(LockingObject lo, CancellationToken ct)
+        {
+            try
+            {
+                await ExecuteTransactionAsync(async session =>
+                {
+                    var loe = await session.Query<LockingObjectEntity>().Where(i => i.AppId == lo.AppId && i.LockerId == lo.LockerId).FirstOrDefaultAsync(ct);
+                    if (loe == null)
+                    {
+                        throw new NullReferenceException($"LockingObjectEntity does not exist: {lo.AppId}, {lo.LockerId}");
+                    }
 
                     loe.LockerId = lo.LockerId;
                     loe.Seed = lo.Seed;
@@ -140,9 +163,9 @@ namespace DistLockNet.SqlBackend
                     await exec.Invoke(session);
                     await transaction.CommitAsync(ct);
                 }
-                catch
+                catch(Exception e)
                 {
-                    _logger.Error("Error happened during the transaction");
+                    _logger.Error($"Error happened during the transaction: {e}");
                     session.Clear();
                     await transaction.RollbackAsync(ct);
 
@@ -151,9 +174,9 @@ namespace DistLockNet.SqlBackend
 
                 session.Close();
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                _logger.Error("Error happened during the session operation");
+                _logger.Error($"Error happened during the session operation: {e}");
                 throw;
             }
         }

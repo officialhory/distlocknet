@@ -20,24 +20,25 @@ namespace DistLockTestConsole
                 .AddJsonFile("settings.json", optional: true, reloadOnChange: true).Build();
 
             ILogger logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
                 .WriteTo.Console()
                 .CreateLogger();
 
             var bnd = new SqlBackend(conf, logger);
 
-            var locker = new Locker(conf, bnd)
+            var locker = new Locker(conf, bnd, logger)
             {
                 OnLockFail = (str) =>
                 {
-                    logger.Debug($"Lock Fail: {str}");
+                    logger.Information($"Lock Fail: {str}");
                 },
                 OnLockLost = (str) =>
                 {
-                    logger.Debug($"Lock Lost: {str}");
+                    logger.Information($"Lock Lost: {str}");
                 },
                 OnLockAcquired = (str) =>
                 {
-                    logger.Debug($"Lock Acquired: {str}");
+                    logger.Information($"Lock Acquired: {str}");
                 }
             };
 
