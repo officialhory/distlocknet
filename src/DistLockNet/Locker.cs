@@ -15,6 +15,7 @@ namespace DistLockNet
 
         public Action<string> OnLockAcquired { get; set; }
         public Action<string> OnLockLost { get; set; }
+        public Action<string> OnLockFail { get; set; }
 
         private readonly CancellationTokenSource _ct;
         private readonly Guid _lockerId;
@@ -54,6 +55,8 @@ namespace DistLockNet
                         StartHeartbeat();
                         return;
                     }
+
+                    OnLockFail?.Invoke(_appId);
                 }
 
                 while (!_ct.IsCancellationRequested)
@@ -69,6 +72,8 @@ namespace DistLockNet
                             StartHeartbeat();
                             return;
                         }
+
+                        OnLockFail?.Invoke(_appId);
                     }
 
                     await Task.Delay(_heartbeat);
@@ -104,6 +109,9 @@ namespace DistLockNet
                     else
                     {
                         _failCounter++;
+
+                        OnLockFail?.Invoke(_appId);
+
                         if (_failCounter >= EXPIRATION_COUNT)
                         {
                             OnLockLost?.Invoke(_appId);

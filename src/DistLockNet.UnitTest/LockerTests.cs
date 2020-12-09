@@ -17,10 +17,13 @@ namespace DistLockNet.UnitTest
         private readonly Locker _locker;
         private readonly ILockingBnd _lockingBnd;
         private readonly Mock<ILockingBnd> _lockingBndMock;
-        private readonly ManualResetEvent _aq = new ManualResetEvent(false);
-        private readonly ManualResetEvent _lo = new ManualResetEvent(false);
+        private readonly AutoResetEvent _aq = new AutoResetEvent(false);
+        private readonly AutoResetEvent _lo = new AutoResetEvent(false);
+        private readonly AutoResetEvent _lf = new AutoResetEvent(false);
+
         private int _lockAq = 0;
         private int _lockLost = 0;
+        private int _lockFail = 0;
 
         public LockerTests()
         {
@@ -43,6 +46,11 @@ namespace DistLockNet.UnitTest
                 {
                     _lockLost++;
                     _lo.Set();
+                },
+                OnLockFail = (str) =>
+                {
+                    _lockFail++;
+                    _lf.Set();
                 }
             };
         }
@@ -88,11 +96,11 @@ namespace DistLockNet.UnitTest
 
             _locker.Lock();
 
-            _aq.WaitOne(2000);
+            _lf.WaitOne(2000);
 
             _locker.Halt();
 
-            _lockAq.Should().Be(0);
+            _lockFail.Should().BeGreaterOrEqualTo(1);
         }
 
         [Fact(DisplayName = "No Locking Object exists, fail to update in heartbeat")]
@@ -110,12 +118,20 @@ namespace DistLockNet.UnitTest
             _locker.Lock();
 
             _aq.WaitOne(2000);
+            
+            _lf.WaitOne(2000);
+            _lf.WaitOne(2000);
+            _lf.WaitOne(2000);
+            _lf.WaitOne(2000);
+            _lf.WaitOne(2000);
+
             _lo.WaitOne(2000);
 
             _locker.Halt();
 
             _lockAq.Should().Be(1);
             _lockLost.Should().Be(1);
+            _lockFail.Should().Be(5);
         }
 
         [Fact(DisplayName = "Locking Object exists, lock successful")]
@@ -160,11 +176,11 @@ namespace DistLockNet.UnitTest
 
             _locker.Lock();
 
-            _aq.WaitOne(2000);
+            _lf.WaitOne(2000);
 
             _locker.Halt();
 
-            _lockAq.Should().Be(0);
+            _lockFail.Should().BeGreaterOrEqualTo(1);
         }
 
         [Fact(DisplayName = "Locking Object exists, fail to update in heartbeat")]
@@ -188,14 +204,22 @@ namespace DistLockNet.UnitTest
                 .ReturnsAsync(false);
 
             _locker.Lock();
-            
+
             _aq.WaitOne(2000);
+
+            _lf.WaitOne(2000);
+            _lf.WaitOne(2000);
+            _lf.WaitOne(2000);
+            _lf.WaitOne(2000);
+            _lf.WaitOne(2000);
+
             _lo.WaitOne(2000);
 
             _locker.Halt();
 
             _lockAq.Should().Be(1);
             _lockLost.Should().Be(1);
+            _lockFail.Should().Be(5);
         }
 
         [Fact(DisplayName = "Wrong timeout value")]
