@@ -3,6 +3,7 @@ using DistLockNet.Models;
 using FluentNHibernate.Cfg;
 using FluentNHibernate.Cfg.Db;
 using Microsoft.Extensions.Configuration;
+using NHibernate;
 using NHibernate.Cfg;
 using NHibernate.Linq;
 using NHibernate.Tool.hbm2ddl;
@@ -33,10 +34,18 @@ namespace DistLockNet.SqlBackend
             // return null if any issue
             try
             {
-                await ExecuteTransactionAsync(async session =>
+                await ExecuteTransactionAsync(session =>
                 {
-                    var qq = (await session.Query<LockingObjectEntity>().ToListAsync(ct)).FirstOrDefault();
-                    return qq;
+                    Func<IQueryable<LockingObjectEntity>, CancellationToken, Task<LockingObjectEntity>> q = async (bq, cancellationToken) =>
+                    {
+                        var r = await bq.Where(x => x.AppId == application).SingleOrDefaultAsync(cancellationToken);
+                        return r;
+                    };
+                    var aa = session.Query<LockingObjectEntity>();
+                    var res = q.Invoke(aa, ct).Result;
+                    // Should be mapped
+                    return res;
+
                 }, ct);
             }
             catch
@@ -83,7 +92,7 @@ namespace DistLockNet.SqlBackend
                 .BuildConfiguration();
         }
 
-        private async Task ExecuteTransactionAsync<TReturn>(Func<Task<TReturn>> exec, CancellationToken ct)
+        private async Task ExecuteTransactionAsync(Func<ISession, Task> exec, CancellationToken ct)
         {
             try
             {
@@ -93,9 +102,7 @@ namespace DistLockNet.SqlBackend
 
                 try
                 {
-
-                    //TODO Fix this chaos 
-                    var res = await exec.Invoke();
+                    await exec.Invoke(session);
                     await transaction.CommitAsync(ct);
                 }
                 catch
