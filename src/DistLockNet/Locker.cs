@@ -129,12 +129,10 @@ namespace DistLockNet
 
         private LockingObject LockingObjectFactory()
         {
-            return new LockingObject
-            {
-                AppId = _appId,
-                Seed = Guid.NewGuid(),
-                LockerId = _lockerId
-            };
+            return new LockingObject(
+                _appId,
+                _lockerId,
+                Guid.NewGuid());
         }
     }
 }

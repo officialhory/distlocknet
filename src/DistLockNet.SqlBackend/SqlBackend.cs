@@ -25,8 +25,8 @@ namespace DistLockNet.SqlBackend
         public SqlBackend(IConfiguration config, ILogger logger)
         {
             _logger = logger;
-            _connectionString = config.GetValue<string>("ConnectionString");
-            _databaseType = config.GetValue<string>("dbtype");
+            _connectionString = config.GetValue<string>("Locker:ConnectionString");
+            _databaseType = config.GetValue<string>("Locker:Type");
         }
 
         public async Task<LockingObject> GetAsync(string application, CancellationToken ct)
