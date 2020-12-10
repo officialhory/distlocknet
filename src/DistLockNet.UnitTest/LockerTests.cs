@@ -4,11 +4,11 @@ using DistLockNet.Models;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Moq;
+using Serilog;
 using System;
 using System.IO;
 using System.Reflection;
 using System.Threading;
-using Serilog;
 using Xunit;
 
 namespace DistLockNet.UnitTest
@@ -61,10 +61,9 @@ namespace DistLockNet.UnitTest
 
         private void Reset()
         {
-            _aq.Reset();
-            _lo.Reset();
             _lockAq = 0;
             _lockLost = 0;
+            _lockFail = 0;
         }
 
         [Fact(DisplayName = "No Locking Object exists, lock successfully")]
@@ -104,7 +103,7 @@ namespace DistLockNet.UnitTest
 
             _locker.Halt();
 
-            _lockFail.Should().BeGreaterOrEqualTo(1);
+            _lockFail.Should().Be(1);
         }
 
         [Fact(DisplayName = "No Locking Object exists, fail to update in heartbeat")]
@@ -183,7 +182,7 @@ namespace DistLockNet.UnitTest
 
             _locker.Halt();
 
-            _lockFail.Should().BeGreaterOrEqualTo(1);
+            _lockFail.Should().Be(1);
         }
 
         [Fact(DisplayName = "Locking Object exists, fail to update in heartbeat")]
