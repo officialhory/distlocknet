@@ -55,7 +55,7 @@ namespace DistLockNet.SqlBackend.Tests
         }
 
         [Fact]
-        public void asdasdasd()
+        public void TwoLockerParallel_Success()
         {
             var bnd0 = new SqlBackend(_config, _logger.Object);
             var lockAq = 0; 
