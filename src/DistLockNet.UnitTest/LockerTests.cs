@@ -143,15 +143,21 @@ namespace DistLockNet.UnitTest
         {
             Reset();
 
+            var loId = Guid.NewGuid();
+            var seedId = Guid.NewGuid();
             _lockingBndMock.Setup(l => l.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new LockingObject("myApp", Guid.NewGuid(), Guid.NewGuid()));
+                .ReturnsAsync(new LockingObject("myApp", loId, seedId));
+
+            _lockingBndMock
+                .SetupSequence(l => l.AllocateAsync(It.IsAny<LockingObject>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true);
 
             _lockingBndMock.Setup(l => l.UpdateAsync(It.IsAny<LockingObject>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(true);
 
             _locker.Lock();
 
-            _aq.WaitOne(2000);
+            _aq.WaitOne(5000);
 
             _locker.Halt();
 
@@ -185,9 +191,15 @@ namespace DistLockNet.UnitTest
         {
             Reset();
 
+            var loId = Guid.NewGuid();
+            var seedId = Guid.NewGuid();
             _lockingBndMock.Setup(l => l.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new LockingObject("myApp", Guid.NewGuid(), Guid.NewGuid()));
-                
+                .ReturnsAsync(new LockingObject("myApp", loId, seedId));
+
+            _lockingBndMock
+                .SetupSequence(l => l.AllocateAsync(It.IsAny<LockingObject>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true);
+
             _lockingBndMock.SetupSequence(l => l.UpdateAsync(It.IsAny<LockingObject>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(true)
                 .ReturnsAsync(false)
@@ -198,7 +210,7 @@ namespace DistLockNet.UnitTest
 
             _locker.Lock();
 
-            _aq.WaitOne(2000);
+            _aq.WaitOne(5000);
 
             _lf.WaitOne(2000);
             _lf.WaitOne(2000);
