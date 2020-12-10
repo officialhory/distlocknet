@@ -14,7 +14,6 @@ namespace DistLockTestConsole
         {
             Console.WriteLine($"App-{Guid.NewGuid()} Started.");
 
-
             var conf = new ConfigurationBuilder()
                 .SetBasePath(Path.GetDirectoryName(Uri.UnescapeDataString((new UriBuilder(Assembly.GetExecutingAssembly().CodeBase)).Path)))
                 .AddJsonFile("settings.json", optional: true, reloadOnChange: true).Build();
