@@ -31,7 +31,6 @@ namespace DistLockNet.SqlBackend
 
         public async Task<LockingObject> GetAsync(string application, CancellationToken ct)
         {
-
             try
             {
                 LockingObjectEntity loe = null;
@@ -40,13 +39,14 @@ namespace DistLockNet.SqlBackend
                     loe = await session.Query<LockingObjectEntity>().Where(i => i.AppId == application).FirstOrDefaultAsync(ct);
                 }, ct);
 
-                return new LockingObject(loe.AppId, loe.LockerId, loe.Seed);
+
+                return loe == null ? null : new LockingObject(loe.AppId, loe.LockerId, loe.Seed);
             }
-            catch(Exception ex)
+            catch
             {
-                _logger.Error($"{ex}");
                 return null;
             }
+           
         }
 
         public async Task<bool> AddAsync(LockingObject lo, CancellationToken ct)
@@ -91,7 +91,7 @@ namespace DistLockNet.SqlBackend
 
                 return true;
             }
-            catch (SqlBackendException ex)
+            catch
             {
                 return false;
             }
@@ -163,7 +163,7 @@ namespace DistLockNet.SqlBackend
                     await exec.Invoke(session);
                     await transaction.CommitAsync(ct);
                 }
-                catch(Exception e)
+                catch (System.Exception e)
                 {
                     _logger.Error($"Error happened during the transaction: {e}");
                     session.Clear();
@@ -174,7 +174,7 @@ namespace DistLockNet.SqlBackend
 
                 session.Close();
             }
-            catch (Exception e)
+            catch (System.Exception e)
             {
                 _logger.Error($"Error happened during the session operation: {e}");
                 throw;

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Serilog;
 
 namespace DistLockNet
@@ -26,19 +27,30 @@ namespace DistLockNet
         private int _seedCounter = 0;
         private int _failCounter = 0;
 
-        private const int EXPIRATION_COUNT = 5;
+        private readonly int _missedHeartBeatCount;
 
         public Locker(IConfiguration config, ILockingBnd bnd, ILogger logger)
         {
+            _logger = logger;
+
             _appId = config.GetValue<string>("Locker:ApplicationId");
             var timeoutSeconds = config.GetValue<int>("Locker:TimeOutSeconds");
-            _heartbeat = timeoutSeconds / EXPIRATION_COUNT * 1000;
+            _missedHeartBeatCount = config.GetValue<int>("Locker:MissedHeartBeatCountBeforeExpire");
+
+            _heartbeat = timeoutSeconds / _missedHeartBeatCount * 1000;
             if (timeoutSeconds < 5)
             {
                 throw new LockerException("Timeout value is too small, should be greater than 5 seconds.");
             }
+
+            _logger.Information(@$"Locker created: {JsonConvert.SerializeObject(new
+            {
+                TimeoutSeconds = timeoutSeconds,
+                HeartBeatSeconds = _heartbeat / 1000,
+                MissedHeartBeatCount = _missedHeartBeatCount 
+            })}");
+
             _bnd = bnd;
-            _logger = logger;
             _ct = new CancellationTokenSource();
             _lockerId = Guid.NewGuid();
         }
@@ -111,7 +123,7 @@ namespace DistLockNet
             if (_lo.Equals(lo))
             {
                 _seedCounter++;
-                return _seedCounter >= EXPIRATION_COUNT;
+                return _seedCounter >= _missedHeartBeatCount;
             }
 
             _lo = lo;
@@ -143,7 +155,7 @@ namespace DistLockNet
 
                         OnLockFail?.Invoke(_appId);
 
-                        if (_failCounter >= EXPIRATION_COUNT)
+                        if (_failCounter >= _missedHeartBeatCount)
                         {
                             _logger.Debug("Lock lost");
 
