@@ -17,6 +17,11 @@ namespace DistLockNet.RedisBackend
             throw new System.NotImplementedException();
         }
 
+        public async Task<bool> AllocateAsync(LockingObject lo, CancellationToken ct)
+        {
+            throw new System.NotImplementedException();
+        }
+
         public Task<bool> UpdateAsync(LockingObject lo, CancellationToken ct)
         {
             throw new System.NotImplementedException();
