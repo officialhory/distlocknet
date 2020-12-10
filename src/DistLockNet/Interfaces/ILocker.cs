@@ -10,6 +10,8 @@ namespace DistLockNet.Interfaces
 
         Action<string> OnLockFail { get; set; }
 
+        Action<string> OnWaitForUnlock { get; set; }
+
         void Lock();
 
         void Halt();

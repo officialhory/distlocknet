@@ -2,11 +2,11 @@
 using DistLockNet.Interfaces;
 using DistLockNet.Models;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
+using Serilog;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Serilog;
 
 namespace DistLockNet
 {
@@ -19,6 +19,7 @@ namespace DistLockNet
         public Action<string> OnLockAcquired { get; set; }
         public Action<string> OnLockLost { get; set; }
         public Action<string> OnLockFail { get; set; }
+        public Action<string> OnWaitForUnlock { get; set; }
 
         private readonly CancellationTokenSource _ct;
         private readonly Guid _lockerId;
@@ -111,8 +112,8 @@ namespace DistLockNet
                         _logger.Debug("LockingObject Allocate fail");
                         OnLockFail?.Invoke(_appId);
                     }
-
-                    _logger.Debug("Foreign LockingObject still alive");
+                    _logger.Debug("Waiting for Lock ...");
+                    OnWaitForUnlock?.Invoke(_appId);
                     await Task.Delay(_heartbeat);
                 }
             }, _ct.Token);
