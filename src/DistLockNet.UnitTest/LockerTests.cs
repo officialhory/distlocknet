@@ -21,11 +21,13 @@ namespace DistLockNet.UnitTest
         private readonly AutoResetEvent _aq = new AutoResetEvent(false);
         private readonly AutoResetEvent _lo = new AutoResetEvent(false);
         private readonly AutoResetEvent _lf = new AutoResetEvent(false);
+        private readonly AutoResetEvent _lw = new AutoResetEvent(false);
+        private readonly ILogger _logger;
 
         private int _lockAq;
         private int _lockLost;
         private int _lockFail;
-        private readonly ILogger _logger;
+        private int _lockWait;
 
         public LockerTests()
         {
@@ -55,6 +57,11 @@ namespace DistLockNet.UnitTest
                 {
                     _lockFail++;
                     _lf.Set();
+                },
+                OnWaitForUnlock = (str) =>
+                {
+                    _lockWait++;
+                    _lw.Set();
                 }
             };
         }
@@ -64,6 +71,7 @@ namespace DistLockNet.UnitTest
             _lockAq = 0;
             _lockLost = 0;
             _lockFail = 0;
+            _lockWait = 0;
         }
 
         [Fact(DisplayName = "No Locking Object exists, lock successfully")]
@@ -225,6 +233,33 @@ namespace DistLockNet.UnitTest
             _lockAq.Should().Be(1);
             _lockLost.Should().Be(1);
             _lockFail.Should().Be(5);
+        }
+
+        [Fact(DisplayName = "Locking Object exists, wait for lock")]
+        public void LockingObject_WaitForLock_Success()
+        {
+            Reset();
+
+            var loId = Guid.NewGuid();
+            var seedId = Guid.NewGuid();
+            _lockingBndMock.SetupSequence(l => l.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new LockingObject("myApp", loId, seedId))
+                .ReturnsAsync(new LockingObject("myApp2", loId, seedId));
+
+            _lockingBndMock
+                .SetupSequence(l => l.AllocateAsync(It.IsAny<LockingObject>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true);
+
+            _lockingBndMock.Setup(l => l.UpdateAsync(It.IsAny<LockingObject>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true);
+
+            _locker.Lock();
+
+            _lw.WaitOne(5000);
+
+            _locker.Halt();
+
+            _lockWait.Should().Be(1);
         }
 
         [Fact(DisplayName = "Wrong timeout value")]
