@@ -22,9 +22,9 @@ namespace DistLockNet.UnitTest
         private readonly AutoResetEvent _lo = new AutoResetEvent(false);
         private readonly AutoResetEvent _lf = new AutoResetEvent(false);
 
-        private int _lockAq = 0;
-        private int _lockLost = 0;
-        private int _lockFail = 0;
+        private int _lockAq;
+        private int _lockLost;
+        private int _lockFail;
         private readonly ILogger _logger;
 
         public LockerTests()
@@ -173,7 +173,8 @@ namespace DistLockNet.UnitTest
             _lockingBndMock.Setup(l => l.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new LockingObject("myApp", loId, seedId));
 
-            _lockingBndMock.Setup(l => l.UpdateAsync(It.IsAny<LockingObject>(), It.IsAny<CancellationToken>()))
+            _lockingBndMock
+                .SetupSequence(l => l.AllocateAsync(It.IsAny<LockingObject>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(false);
 
             _locker.Lock();
