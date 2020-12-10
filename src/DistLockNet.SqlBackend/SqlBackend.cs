@@ -10,9 +10,9 @@ using NHibernate.Tool.hbm2ddl;
 using Serilog;
 using System;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-using DistLockNet.SqlBackend.Exception;
 
 namespace DistLockNet.SqlBackend
 {
@@ -74,36 +74,22 @@ namespace DistLockNet.SqlBackend
 
         public async Task<bool> AllocateAsync(LockingObject lo, CancellationToken ct)
         {
-            try
-            {
-                await ExecuteTransactionAsync(async session =>
-                {
-                    var loe = await session.Query<LockingObjectEntity>().Where(i => i.AppId == lo.AppId).FirstOrDefaultAsync(ct);
-                    if (loe == null)
-                    {
-                        throw new SqlBackendException($"LockingObjectEntity does not exist: {lo.AppId}, {lo.LockerId}");
-                    }
-
-                    loe.LockerId = lo.LockerId;
-                    loe.Seed = lo.Seed;
-                    await session.SaveAsync(loe, ct);
-                }, ct);
-
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            return await ModifyAsync(lo, x => x.AppId == lo.AppId, ct);
         }
 
         public async Task<bool> UpdateAsync(LockingObject lo, CancellationToken ct)
+        {
+            return await ModifyAsync(lo, x => x.AppId == lo.AppId && x.LockerId == lo.LockerId, ct);
+        }
+
+        private async Task<bool> ModifyAsync(LockingObject lo,
+            Expression<Func<LockingObjectEntity, bool>> predicate, CancellationToken ct)
         {
             try
             {
                 await ExecuteTransactionAsync(async session =>
                 {
-                    var loe = await session.Query<LockingObjectEntity>().Where(i => i.AppId == lo.AppId && i.LockerId == lo.LockerId).FirstOrDefaultAsync(ct);
+                    var loe = await session.Query<LockingObjectEntity>().Where(predicate).FirstOrDefaultAsync(ct);
                     if (loe == null)
                     {
                         throw new NullReferenceException($"LockingObjectEntity does not exist: {lo.AppId}, {lo.LockerId}");
