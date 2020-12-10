@@ -4,11 +4,11 @@ using DistLockNet.Models;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Moq;
+using Serilog;
 using System;
 using System.IO;
 using System.Reflection;
 using System.Threading;
-using Serilog;
 using Xunit;
 
 namespace DistLockNet.UnitTest
@@ -22,9 +22,9 @@ namespace DistLockNet.UnitTest
         private readonly AutoResetEvent _lo = new AutoResetEvent(false);
         private readonly AutoResetEvent _lf = new AutoResetEvent(false);
 
-        private int _lockAq = 0;
-        private int _lockLost = 0;
-        private int _lockFail = 0;
+        private int _lockAq;
+        private int _lockLost;
+        private int _lockFail;
         private readonly ILogger _logger;
 
         public LockerTests()
@@ -61,10 +61,9 @@ namespace DistLockNet.UnitTest
 
         private void Reset()
         {
-            _aq.Reset();
-            _lo.Reset();
             _lockAq = 0;
             _lockLost = 0;
+            _lockFail = 0;
         }
 
         [Fact(DisplayName = "No Locking Object exists, lock successfully")]
@@ -104,7 +103,7 @@ namespace DistLockNet.UnitTest
 
             _locker.Halt();
 
-            _lockFail.Should().BeGreaterOrEqualTo(1);
+            _lockFail.Should().Be(1);
         }
 
         [Fact(DisplayName = "No Locking Object exists, fail to update in heartbeat")]
@@ -174,7 +173,8 @@ namespace DistLockNet.UnitTest
             _lockingBndMock.Setup(l => l.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new LockingObject("myApp", loId, seedId));
 
-            _lockingBndMock.Setup(l => l.UpdateAsync(It.IsAny<LockingObject>(), It.IsAny<CancellationToken>()))
+            _lockingBndMock
+                .SetupSequence(l => l.AllocateAsync(It.IsAny<LockingObject>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(false);
 
             _locker.Lock();
@@ -183,7 +183,7 @@ namespace DistLockNet.UnitTest
 
             _locker.Halt();
 
-            _lockFail.Should().BeGreaterOrEqualTo(1);
+            _lockFail.Should().Be(1);
         }
 
         [Fact(DisplayName = "Locking Object exists, fail to update in heartbeat")]
