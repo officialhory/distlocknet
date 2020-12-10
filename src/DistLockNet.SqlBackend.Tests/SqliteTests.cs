@@ -20,10 +20,6 @@ namespace DistLockNet.SqlBackend.Tests
         private readonly AutoResetEvent _lo = new AutoResetEvent(false);
         private readonly AutoResetEvent _lf = new AutoResetEvent(false);
 
-        private int _lockAq = 0;
-        private int _lockLost = 0;
-        private int _lockFail = 0;
-
         public SqliteTests()
         {
             _config = new ConfigurationBuilder()
@@ -34,45 +30,72 @@ namespace DistLockNet.SqlBackend.Tests
 
         }
 
-        private void Reset()
-        {
-            _lockAq = 0;
-            _lockLost = 0;
-            _lockFail = 0;
-        }
-
         [Fact]
         public void Sqlite_Success()
         {
-            Reset();
+            var lockAq = 0;
+
             var bnd = new SqlBackend(_config, _logger.Object);
 
             var locker = new Locker(_config, bnd, _logger.Object)
             {
                 OnLockAcquired = (str) =>
                 {
-                    _lockAq++;
+                    lockAq++;
                     _aq.Set();
-                },
-                OnLockLost = (str) =>
-                {
-                    _lockLost++;
-                    _lo.Set();
-                },
-                OnLockFail = (str) =>
-                {
-                    _lockFail++;
-                    _lf.Set();
                 }
             };
 
             locker.Lock();
-
             _aq.WaitOne(10000);
-
             locker.Halt();
 
-            _lockAq.Should().Be(1);
+
+            lockAq.Should().Be(1);
+        }
+
+        [Fact]
+        public void asdasdasd()
+        {
+            var bnd0 = new SqlBackend(_config, _logger.Object);
+            var lockAq = 0; 
+            var lockWait = 0;
+
+            var locker0 = new Locker(_config, bnd0, _logger.Object)
+            {
+                OnLockAcquired = (str) =>
+                {
+                    lockAq++;
+                    _aq.Set();
+                },
+                OnWaitForUnlock = (str) =>
+                {
+                    lockWait++;
+                }
+            };
+
+            var bnd1 = new SqlBackend(_config, _logger.Object);
+            var locker1 = new Locker(_config, bnd1, _logger.Object)
+            {
+                OnLockAcquired = (str) =>
+                {
+                    lockAq++;
+                    _aq.Set();
+                },
+                OnWaitForUnlock = (str) =>
+                {
+                    lockWait++;
+                }
+            };
+
+            locker0.Lock();
+            _aq.WaitOne(6000);
+            locker1.Lock();
+            locker0.Halt();
+            locker1.Halt();
+
+            lockAq.Should().Be(1);
+            lockWait.Should().Be(2);
         }
     }
 }
