@@ -34,4 +34,4 @@ jobs:
         dotnet pack ./src/DistLockNet.SqlBackend/DistLockNet.SqlBackend.csproj --configuration Release --output ./packages --include-symbols --include-source
         
     - name: publish      
-      run: dotnet nuget push ./packages/**/*.nupkg --skip-duplicate true --no-symbols true --source https://api.nuget.org/v3/index.json
+      run: dotnet nuget push ./packages/**/*.nupkg --skip-duplicate true --no-symbols true --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.nuget_api_key }}
