@@ -4,9 +4,16 @@ namespace DistLockNet.Models
 {
     public class LockingObject
     {
-        public string AppId { get; set; }
-        public Guid LockerId { get; set; }
-        public Guid Seed { get; set; }
+        public string AppId { get; }
+        public Guid LockerId { get; }
+        public Guid Seed { get; }
+
+        public LockingObject(string appId, Guid lockerId, Guid seed)
+        {
+            AppId = appId;
+            LockerId = lockerId;
+            Seed = seed;
+        }
 
         public override bool Equals(object obj)
         {
@@ -15,6 +22,11 @@ namespace DistLockNet.Models
 
         protected bool Equals(LockingObject other)
         {
+            if (other == null)
+            {
+                return false;
+            }
+
             return AppId == other.AppId && LockerId.Equals(other.LockerId) && Seed.Equals(other.Seed);
         }
 

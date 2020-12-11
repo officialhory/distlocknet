@@ -1,0 +1,47 @@
+version: "2.1"
+
+services:
+  postgres:
+    image: postgres
+    container_name: postgres
+    ports:
+      - 5432:5432
+    restart: on-failure
+    build: ./configs/postgres
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./configs/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "5"
+        max-size: "100m"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+    networks:
+      - locker-net
+  
+  pgadmin:
+    image: pgadmin
+    container_name: pgadmin
+    restart: on-failure
+    build: ./configs/pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - 5050:80
+    networks:
+      - locker-net
+
+networks:
+  locker-net:
+    name: locker-net
