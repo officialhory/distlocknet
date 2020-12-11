@@ -1,0 +1,37 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Continous Delivery
+
+# Controls when the action will run. 
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - run: |
+        git fetch origin +refs/heads/*:refs/remotes/origin/* --unshallow --tags
+               
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1.100
+    
+    - name: Build
+      run: dotnet build ./src/DistLockNet/DistLockNet.sln --configuration Release
+    
+    - name: Test
+      run: dotnet test ./src/DistLockNet/DistLockNet.sln
+      
+    - name: Pack
+      run: |
+        dotnet pack ./src/DistLockNet/DistLockNet.csproj --configuration Release --output ./packages --include-symbols --include-source
+        dotnet pack ./src/DistLockNet.SqlBackend/DistLockNet.SqlBackend.csproj --configuration Release --output ./packages --include-symbols --include-source
+        
+    - name: publish      
+      run: dotnet nuget push ./packages/**/*.nupkg --skip-duplicate true --no-symbols true --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.nuget_api_key }}
