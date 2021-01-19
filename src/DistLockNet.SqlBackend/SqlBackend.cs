@@ -46,7 +46,7 @@ namespace DistLockNet.SqlBackend
             {
                 return null;
             }
-           
+
         }
 
         public async Task<bool> AddAsync(LockingObject lo, CancellationToken ct)
@@ -141,7 +141,7 @@ namespace DistLockNet.SqlBackend
             try
             {
                 var dbConfig = DatabaseConfiguration(_databaseType);
-                var session = dbConfig.BuildSessionFactory().OpenSession();
+                using var session = dbConfig.BuildSessionFactory().OpenSession();
                 using var transaction = session.BeginTransaction();
 
                 try
