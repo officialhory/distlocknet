@@ -21,12 +21,14 @@ namespace DistLockNet.SqlBackend
         private readonly ILogger _logger;
         private readonly string _connectionString;
         private readonly string _databaseType;
+        private readonly ISessionFactory sessionFactory;
 
         public SqlBackend(IConfiguration config, ILogger logger)
         {
             _logger = logger;
             _connectionString = config.GetValue<string>("Locker:ConnectionString");
             _databaseType = config.GetValue<string>("Locker:Type");
+            sessionFactory = DatabaseConfiguration(_databaseType).BuildSessionFactory();
         }
 
         public async Task<LockingObject> GetAsync(string application, CancellationToken ct)
@@ -140,8 +142,7 @@ namespace DistLockNet.SqlBackend
         {
             try
             {
-                var dbConfig = DatabaseConfiguration(_databaseType);
-                using var session = dbConfig.BuildSessionFactory().OpenSession();
+                using var session = sessionFactory.OpenSession();
                 using var transaction = session.BeginTransaction();
 
                 try
