@@ -4,10 +4,6 @@ General distributed lock solution for .NET
 ## About
 The Distributed Lock can be used to easily and efficently handle locking of different application instances.
 
-## How to use
-A compose file can be found at the root of the repository which can be used to set up a Postgres database and a PgAdmin administration and development platform.
-All you need to do is to execute the following command from the root of the project: `docker-compse up --build`
-
 ### DistLockNet
 
 ### ILocker
@@ -35,9 +31,7 @@ The configuration file that is provided for the Locker should look something lik
 	"Locker": {
 		"ApplicationId": "yourAppId",
 		"TimeOutSeconds": timeoutLengthInSeconds,
-		"MissedHeartBeatCountBeforeExpire": missedHeartBeatCount,
-		"ConnectionString": "connectionString",
-		"Type": "typeOfDatabase"
+		"MissedHeartBeatCountBeforeExpire": missedHeartBeatCount
 	}
 }
 ```
@@ -57,8 +51,9 @@ Properties:
 - `Guid Seed { get; }` - Changes value in every heartbeat
 
 ### SqlBackend
-Implements the ILockingBnd interface.
-Handles the following databases:
-- Oracle
-- Postgres
-- SQLite
+Implements the ILockingBnd interface. It uses EF Core 5.0.3 for Db interaction. 
+
+## How to use
+A compose file can be found at the root of the repository which can be used to set up a Postgres database and a PgAdmin administration and development platform.
+All you need to do is to execute the following command from the root of the project: `docker-compse up --build`
+When the infrastructure is configured successfully, DistLockTestConsole can be started for testing the solution.

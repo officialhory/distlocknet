@@ -23,7 +23,9 @@ namespace DistLockTestConsole
                 .WriteTo.Console()
                 .CreateLogger();
 
-            var bnd = new SqlBackend(conf, logger);
+            var dps = new DataProviderSelector(conf);
+            var cf = new DbContextFactory(dps);
+            var bnd = new SqlBackend(cf, logger);
 
             var locker = new Locker(conf, bnd, logger)
             {

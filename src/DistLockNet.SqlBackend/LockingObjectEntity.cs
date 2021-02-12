@@ -1,13 +1,15 @@
-﻿using FluentNHibernate.Data;
-using System;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace DistLockNet.SqlBackend
 {
-    public class LockingObjectEntity : Entity
+    public class LockingObjectEntity
     {
-        public virtual string AppId { get; set; }
-        public virtual Guid LockerId { get; set; }
-        public virtual Guid Seed { get; set; }
-        public virtual long Version { get; set; }
+        [Key]
+        public string AppId { get; set; }
+        public Guid LockerId { get; set; }
+        public Guid Seed { get; set; }
+        [Timestamp]
+        public byte[] TimeStamp { get; set; }
     }
 }

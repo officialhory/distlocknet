@@ -48,7 +48,7 @@ namespace DistLockNet
             {
                 TimeoutSeconds = timeoutSeconds,
                 HeartBeatSeconds = _heartbeat / 1000,
-                MissedHeartBeatCount = _missedHeartBeatCount 
+                MissedHeartBeatCount = _missedHeartBeatCount
             })}");
 
             _bnd = bnd;
