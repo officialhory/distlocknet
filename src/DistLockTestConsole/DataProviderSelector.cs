@@ -13,9 +13,7 @@ namespace DistLockTestConsole
         }
         public void UseSql(DbContextOptionsBuilder optionsBuilder)
         {
-            var cstr = _configuration["Locker:ConnectionString"];
-
-            optionsBuilder.UseNpgsql(cstr);
+            optionsBuilder.UseNpgsql(_configuration["ConnectionString"]);
         }
     }
 }

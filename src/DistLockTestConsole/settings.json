@@ -2,7 +2,7 @@
 	"Locker": {
 		"ApplicationId": "myApp",
 		"TimeOutSeconds": 5,
-		"MissedHeartBeatCountBeforeExpire": 5,
-		"ConnectionString": "Host=localhost; Port=5432; Database=woa; Username=admin; Password=admin; Pooling=true"
-	}
+		"MissedHeartBeatCountBeforeExpire": 5
+	},
+  "ConnectionString": "Host=localhost; Port=5432; Database=woa; Username=admin; Password=admin; Pooling=true"
 }
