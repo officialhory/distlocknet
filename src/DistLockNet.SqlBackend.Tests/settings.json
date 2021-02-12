@@ -2,8 +2,6 @@
   "Locker": {
     "ApplicationId": "myApp",
     "TimeOutSeconds": 6,
-    "MissedHeartBeatCountBeforeExpire": 3,
-    "ConnectionString": "Data Source={locker};Mode=Memory;Cache=Shared",
-    "Type": "sqlite"
+    "MissedHeartBeatCountBeforeExpire": 3
   }
 }

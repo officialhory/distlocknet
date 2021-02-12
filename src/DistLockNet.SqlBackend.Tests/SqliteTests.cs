@@ -13,12 +13,12 @@ namespace DistLockNet.SqlBackend.Tests
     public class SqliteTests
     {
         private readonly IConfiguration _config;
-        
+
         private readonly Mock<ILogger> _logger;
-        
+
         private readonly AutoResetEvent _aq = new AutoResetEvent(false);
-        private readonly AutoResetEvent _lo = new AutoResetEvent(false);
-        private readonly AutoResetEvent _lf = new AutoResetEvent(false);
+        private readonly DataProviderSelector _dataProviderSelector;
+        private readonly DbContextFactory _dbContextFactory;
 
         public SqliteTests()
         {
@@ -28,6 +28,8 @@ namespace DistLockNet.SqlBackend.Tests
 
             _logger = new Mock<ILogger>();
 
+            _dataProviderSelector = new DataProviderSelector(_config);
+            _dbContextFactory = new DbContextFactory(_dataProviderSelector);
         }
 
         [Fact]
@@ -35,7 +37,7 @@ namespace DistLockNet.SqlBackend.Tests
         {
             var lockAq = 0;
 
-            var bnd = new SqlBackend(_config, _logger.Object);
+            var bnd = new SqlBackend(_dbContextFactory, _logger.Object);
 
             var locker = new Locker(_config, bnd, _logger.Object)
             {
@@ -57,8 +59,8 @@ namespace DistLockNet.SqlBackend.Tests
         [Fact]
         public void TwoLockerParallel_Success()
         {
-            var bnd0 = new SqlBackend(_config, _logger.Object);
-            var lockAq = 0; 
+            var bnd0 = new SqlBackend(_dbContextFactory, _logger.Object);
+            var lockAq = 0;
             var lockWait = 0;
 
             var locker0 = new Locker(_config, bnd0, _logger.Object)
@@ -74,7 +76,7 @@ namespace DistLockNet.SqlBackend.Tests
                 }
             };
 
-            var bnd1 = new SqlBackend(_config, _logger.Object);
+            var bnd1 = new SqlBackend(_dbContextFactory, _logger.Object);
             var locker1 = new Locker(_config, bnd1, _logger.Object)
             {
                 OnLockAcquired = (str) =>

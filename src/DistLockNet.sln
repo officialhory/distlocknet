@@ -5,7 +5,13 @@ VisualStudioVersion = 16.0.30717.126
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistLockNet", "DistLockNet\DistLockNet.csproj", "{F15E8A29-67BC-445B-AA82-7C7ABB245836}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DistLockNet.SqlBackend", "DistLockNet.SqlBackend\DistLockNet.SqlBackend.csproj", "{A4255392-B60F-4A30-95E7-CA108535ABB7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistLockNet.SqlBackend", "DistLockNet.SqlBackend\DistLockNet.SqlBackend.csproj", "{A4255392-B60F-4A30-95E7-CA108535ABB7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistLockTestConsole", "DistLockTestConsole\DistLockTestConsole.csproj", "{E37A0048-B1C2-45E1-8803-CF8A11B8D399}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistLockNet.UnitTest", "DistLockNet.UnitTest\DistLockNet.UnitTest.csproj", "{A170FFFD-16F5-4BCD-A5E6-EABF6FC03C00}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistLockNet.SqlBackend.Tests", "DistLockNet.SqlBackend.Tests\DistLockNet.SqlBackend.Tests.csproj", "{F2179048-6443-4A02-B0AF-7FBBB722F3EE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +27,18 @@ Global
 		{A4255392-B60F-4A30-95E7-CA108535ABB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A4255392-B60F-4A30-95E7-CA108535ABB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A4255392-B60F-4A30-95E7-CA108535ABB7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E37A0048-B1C2-45E1-8803-CF8A11B8D399}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E37A0048-B1C2-45E1-8803-CF8A11B8D399}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E37A0048-B1C2-45E1-8803-CF8A11B8D399}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E37A0048-B1C2-45E1-8803-CF8A11B8D399}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A170FFFD-16F5-4BCD-A5E6-EABF6FC03C00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A170FFFD-16F5-4BCD-A5E6-EABF6FC03C00}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A170FFFD-16F5-4BCD-A5E6-EABF6FC03C00}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A170FFFD-16F5-4BCD-A5E6-EABF6FC03C00}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2179048-6443-4A02-B0AF-7FBBB722F3EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2179048-6443-4A02-B0AF-7FBBB722F3EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2179048-6443-4A02-B0AF-7FBBB722F3EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2179048-6443-4A02-B0AF-7FBBB722F3EE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
