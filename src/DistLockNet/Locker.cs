@@ -114,7 +114,7 @@ namespace DistLockNet
                     }
                     _logger.Debug("Waiting for Lock ...");
                     OnWaitForUnlock?.Invoke(_appId);
-                    //await Task.Delay(_heartbeat);
+                    await Task.Delay(_heartbeat);
                 }
             }, _ct.Token);
         }

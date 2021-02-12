@@ -9,5 +9,7 @@ namespace DistLockNet.SqlBackend
         public string AppId { get; set; }
         public Guid LockerId { get; set; }
         public Guid Seed { get; set; }
+        [Timestamp]
+        public byte[] TimeStamp { get; set; }
     }
 }
