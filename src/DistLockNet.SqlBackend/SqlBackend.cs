@@ -1,12 +1,7 @@
 using DistLockNet.Interfaces;
 using DistLockNet.Models;
-using FluentNHibernate.Cfg;
-using FluentNHibernate.Cfg.Db;
-using Microsoft.Extensions.Configuration;
-using NHibernate;
-using NHibernate.Cfg;
-using NHibernate.Linq;
-using NHibernate.Tool.hbm2ddl;
+using DistLockNet.SqlBackend.Exception;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System;
 using System.Linq;
@@ -19,16 +14,12 @@ namespace DistLockNet.SqlBackend
     public class SqlBackend : ILockingBnd
     {
         private readonly ILogger _logger;
-        private readonly string _connectionString;
-        private readonly string _databaseType;
-        private readonly ISessionFactory sessionFactory;
+        private readonly IDbContextFactory _contextFactory;
 
-        public SqlBackend(IConfiguration config, ILogger logger)
+        public SqlBackend(IDbContextFactory contextFactory, ILogger logger)
         {
+            _contextFactory = contextFactory;
             _logger = logger;
-            _connectionString = config.GetValue<string>("Locker:ConnectionString");
-            _databaseType = config.GetValue<string>("Locker:Type");
-            sessionFactory = DatabaseConfiguration(_databaseType).BuildSessionFactory();
         }
 
         public async Task<LockingObject> GetAsync(string application, CancellationToken ct)
@@ -36,9 +27,9 @@ namespace DistLockNet.SqlBackend
             try
             {
                 LockingObjectEntity loe = null;
-                await ExecuteTransactionAsync(async session =>
+                await ExecuteTransactionAsync(async context =>
                 {
-                    loe = await session.Query<LockingObjectEntity>().Where(i => i.AppId == application).FirstOrDefaultAsync(ct);
+                    loe = await context.Set<LockingObjectEntity>().Where(i => i.AppId == application).FirstOrDefaultAsync(ct);
                 }, ct);
 
 
@@ -55,9 +46,9 @@ namespace DistLockNet.SqlBackend
         {
             try
             {
-                await ExecuteTransactionAsync(async session =>
+                await ExecuteTransactionAsync(async context =>
                 {
-                    await session.SaveAsync(new LockingObjectEntity
+                    await context.AddAsync(new LockingObjectEntity
                     {
                         AppId = lo.AppId,
                         LockerId = lo.LockerId,
@@ -89,17 +80,16 @@ namespace DistLockNet.SqlBackend
         {
             try
             {
-                await ExecuteTransactionAsync(async session =>
+                await ExecuteTransactionAsync(async context =>
                 {
-                    var loe = await session.Query<LockingObjectEntity>().Where(predicate).FirstOrDefaultAsync(ct);
+                    var loe = await context.Set<LockingObjectEntity>().Where(predicate).FirstOrDefaultAsync(ct);
                     if (loe == null)
                     {
-                        throw new NullReferenceException($"LockingObjectEntity does not exist: {lo.AppId}, {lo.LockerId}");
+                        throw new SqlBackendException($"LockingObjectEntity does not exist: {lo.AppId}, {lo.LockerId}");
                     }
 
                     loe.LockerId = lo.LockerId;
                     loe.Seed = lo.Seed;
-                    await session.SaveAsync(loe, ct);
                 }, ct);
 
                 return true;
@@ -110,60 +100,33 @@ namespace DistLockNet.SqlBackend
             }
         }
 
-        private Configuration DatabaseConfiguration(string dbType)
-        {
-            var cfg = Fluently.Configure();
 
-            switch (dbType.ToLower())
-            {
-                case "oracle":
-                    cfg.Database(OracleManagedDataClientConfiguration.Oracle10.ConnectionString(_connectionString));
-                    break;
-
-                case "postgres":
-                    cfg.Database(PostgreSQLConfiguration.PostgreSQL82.ConnectionString(_connectionString));
-                    break;
-
-                case "sqlite":
-                    cfg.Database(SQLiteConfiguration.Standard.ConnectionString(_connectionString));
-                    break;
-
-                default:
-                    _logger.Error("Unknown database type: {type}.", dbType);
-                    break;
-            }
-
-            return cfg.ExposeConfiguration(c => new SchemaUpdate(c).Execute(true, true))
-                .Mappings(map => map.FluentMappings.AddFromAssemblyOf<LockingObjectEntity>())
-                .BuildConfiguration();
-        }
-
-        private async Task ExecuteTransactionAsync(Func<ISession, Task> exec, CancellationToken ct)
+        private async Task ExecuteTransactionAsync(Func<DbContext, Task> exec, CancellationToken ct)
         {
             try
             {
-                using var session = sessionFactory.OpenSession();
-                using var transaction = session.BeginTransaction();
-
-                try
+                using (var context = _contextFactory.GetContext())
                 {
-                    await exec.Invoke(session);
-                    await transaction.CommitAsync(ct);
+                    using (var transaction = await context.Database.BeginTransactionAsync(ct))
+                    {
+                        try
+                        {
+                            await exec.Invoke(context);
+                            await context.SaveChangesAsync(ct);
+                            await transaction.CommitAsync(ct);
+                        }
+                        catch (System.Exception e)
+                        {
+                            _logger.Error($"Error happened during the transaction: {e}");
+                            await transaction.RollbackAsync(ct);
+                            throw;
+                        }
+                    }
                 }
-                catch (System.Exception e)
-                {
-                    _logger.Error($"Error happened during the transaction: {e}");
-                    session.Clear();
-                    await transaction.RollbackAsync(ct);
-
-                    throw;
-                }
-
-                session.Close();
             }
             catch (System.Exception e)
             {
-                _logger.Error($"Error happened during the session operation: {e}");
+                _logger.Error($"Error happened during the context operation: {e}");
                 throw;
             }
         }

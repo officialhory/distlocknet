@@ -48,7 +48,7 @@ namespace DistLockNet
             {
                 TimeoutSeconds = timeoutSeconds,
                 HeartBeatSeconds = _heartbeat / 1000,
-                MissedHeartBeatCount = _missedHeartBeatCount 
+                MissedHeartBeatCount = _missedHeartBeatCount
             })}");
 
             _bnd = bnd;
@@ -114,7 +114,7 @@ namespace DistLockNet
                     }
                     _logger.Debug("Waiting for Lock ...");
                     OnWaitForUnlock?.Invoke(_appId);
-                    await Task.Delay(_heartbeat);
+                    //await Task.Delay(_heartbeat);
                 }
             }, _ct.Token);
         }
