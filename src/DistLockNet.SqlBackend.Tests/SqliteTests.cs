@@ -33,7 +33,7 @@ namespace DistLockNet.SqlBackend.Tests
         }
 
         [Fact]
-        public void Sqlite_Success()
+        public void NoLockDB_SetNewLocker_LockAcquiredSuccessfully()
         {
             var lockAq = 0;
 
@@ -57,7 +57,7 @@ namespace DistLockNet.SqlBackend.Tests
         }
 
         [Fact]
-        public void TwoLockerParallel_Success()
+        public void LockSetInDb_SetAnotherLocker_LockAcquireFailed()
         {
             var bnd0 = new SqlBackend(_dbContextFactory, _logger.Object);
             var lockAq = 0;

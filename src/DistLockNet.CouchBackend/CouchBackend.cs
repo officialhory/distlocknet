@@ -1,7 +1,7 @@
 ﻿using DistLockNet.CouchBackend.Exception;
+using DistLockNet.CouchBackend.Model;
 using DistLockNet.Interfaces;
 using DistLockNet.Models;
-using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Serilog;
 using System;
@@ -16,77 +16,75 @@ namespace DistLockNet.CouchBackend
 {
     public class CouchBackend : ILockingBnd
     {
-        private readonly IConfiguration _configuration;
+        private readonly CouchConfig _config;
         private readonly ILogger _logger;
 
-        private readonly string _couchUrl;
-        private readonly string _couchUserName;
-        private readonly string _couchPassword;
-        private readonly bool _doAuth;
-
-        public CouchBackend(IConfiguration configuration, ILogger logger)
+        public CouchBackend(CouchConfig config, ILogger logger)
         {
-            _configuration = configuration;
+            _config = config;
             _logger = logger;
-            _couchUrl = _configuration["CouchDB:Url"];
-            _couchUserName = _configuration["CouchDB:UserName"];
-            _couchPassword = _configuration["CouchDB:Password"];
-            _doAuth = !string.IsNullOrEmpty(_couchUserName) && !string.IsNullOrEmpty(_couchPassword);
         }
 
         public async Task<LockingObject> GetAsync(string application, CancellationToken ct)
         {
+            _logger.Verbose("Trying to get LockingObject for application: {Application}", application);
             try
             {
                 using var client = new HttpClient();
                 DoAuth(client);
-                var response = await client.GetAsync($"{_couchUrl}/lock/{application}", ct);
+                var response = await client.GetAsync($"{_config.Url}/lock/{application}", ct);
 
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync();
                     var loe = JsonConvert.DeserializeObject<LockingObject>(content);
-
+                    _logger.Verbose("Successfully get LockingObject for application: {Application}", application);
                     return loe;
                 }
 
-                throw new CouchBackendException(response.StatusCode.ToString());
+                throw new CouchBackendException((int)response.StatusCode, response.Content.ToString());
             }
-            catch
+            catch (CouchBackendException e)
             {
+                _logger.Verbose(e, "Error during getting LockingObject. StatusCode: {ErrorCode}. Message: {ErrorMessage}", e.ErrorCode, e.ErrorMessage);
                 return null;
             }
         }
 
         public async Task<bool> AddAsync(LockingObject lo, CancellationToken ct)
         {
+            _logger.Verbose("Trying to add LockingObject for application: {Application}", lo.AppId);
             try
             {
                 using var client = new HttpClient();
                 DoAuth(client);
                 var body = new StringContent(JsonConvert.SerializeObject(lo));
-                var response = await client.PutAsync($"{_couchUrl}/lock/{lo.AppId}", body, ct);
+                var response = await client.PutAsync($"{_config.Url}/lock/{lo.AppId}", body, ct);
 
                 if (response.IsSuccessStatusCode)
                 {
+                    _logger.Verbose("Successfully add LockingObject for application: {Application}", lo.AppId);
                     return true;
                 }
 
-                throw new CouchBackendException(response.StatusCode.ToString());
+                throw new CouchBackendException((int)response.StatusCode, response.Content.ToString());
             }
-            catch
+            catch (CouchBackendException e)
             {
+                _logger.Verbose(e, "Error during adding LockingObject. StatusCode: {ErrorCode}. Message: {ErrorMessage}", e.ErrorCode, e.ErrorMessage);
                 return false;
             }
         }
 
         public async Task<bool> AllocateAsync(LockingObject lo, CancellationToken ct)
         {
+            _logger.Verbose("Trying to allocate LockingObject for application: {Application}", lo.AppId);
             return await ModifyAsync(lo, x => x.AppId == lo.AppId, ct);
         }
 
         public async Task<bool> UpdateAsync(LockingObject lo, CancellationToken ct)
         {
+            _logger.Verbose("Trying to update LockingObject for application: {Application}", lo.AppId);
             return await ModifyAsync(lo, x => x.AppId == lo.AppId && x.LockerId == lo.LockerId, ct);
         }
 
@@ -96,10 +94,11 @@ namespace DistLockNet.CouchBackend
             {
                 using var client = new HttpClient();
                 DoAuth(client);
-                var response = await client.GetAsync($"{_couchUrl}/lock/{lo.AppId}", ct);
+                var response = await client.GetAsync($"{_config.Url}/lock/{lo.AppId}", ct);
 
                 if (response.IsSuccessStatusCode)
                 {
+                    _logger.Verbose("Successfully get LockingObject for application: {Application}", lo.AppId);
                     var content = await response.Content.ReadAsStringAsync();
                     var savedEntities = JsonConvert.DeserializeObject<IList<LockingObjectEntity>>(content);
 
@@ -110,33 +109,35 @@ namespace DistLockNet.CouchBackend
                         lockingObject.Seed = lo.Seed;
 
                         var body = new StringContent(JsonConvert.SerializeObject(lockingObject));
-                        var putResponse = await client.PutAsync($"{_couchUrl}/lock/{lockingObject.AppId}", body, ct);
+                        var putResponse = await client.PutAsync($"{_config.Url}/lock/{lockingObject.AppId}", body, ct);
 
                         if (putResponse.IsSuccessStatusCode)
                         {
+                            _logger.Verbose("Successfully modify LockingObject for application: {Application}", lo.AppId);
                             return true;
                         }
 
-                        throw new CouchBackendException($"LockingObjectEntity may be changed: {lo.AppId}, {lo.LockerId}");
+                        throw new CouchBackendException((int)response.StatusCode, "Cannot modify LockingObject. Reason: " + response.Content);
                     }
                 }
 
-                throw new CouchBackendException($"LockingObjectEntity could not be found: {lo.AppId}, {lo.LockerId}");
+                throw new CouchBackendException((int)response.StatusCode, "Cannot get LockingObject. Reason: " + response.Content);
             }
-            catch
+            catch (CouchBackendException e)
             {
+                _logger.Verbose(e, "Error during updating LockingObject. StatusCode: {ErrorCode}. Message: {ErrorMessage}", e.ErrorCode, e.ErrorMessage);
                 return false;
             }
         }
 
         private void DoAuth(HttpClient client)
         {
-            if (!_doAuth)
+            if (!_config.DoAuth)
             {
                 return;
             }
 
-            var byteArray = Encoding.ASCII.GetBytes($"{_couchUserName}:{_couchPassword}");
+            var byteArray = Encoding.ASCII.GetBytes($"{_config.UserName}:{_config.Password}");
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
         }
     }
