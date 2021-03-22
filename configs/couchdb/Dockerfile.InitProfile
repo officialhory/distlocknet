@@ -1,0 +1,5 @@
+FROM ellerbrock/alpine-bash-curl-ssl
+USER root
+ADD ./configs/couchdb/init-profile.sh /init-profile.sh
+RUN chmod +x /init-profile.sh 
+ENTRYPOINT [ "/init-profile.sh" ]

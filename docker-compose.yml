@@ -41,6 +41,46 @@ services:
       - 5050:80
     networks:
       - locker-net
+  
+  couchdb:
+    image: couchdb
+    container_name: couchdb
+    build: ./configs/couchdb
+    environment:
+      COUCHDB_USER: admin
+      COUCHDB_PASSWORD: admin
+    ports:
+      - "5984:5984"
+      - "5986:5986"
+    networks:
+      - locker-net
+    cap_add:
+      - SYS_NICE
+      - SYS_RESOURCE
+    restart: on-failure
+    healthcheck:
+      test: curl http://localhost:5984/_up > /dev/null
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  couch-profile:
+    image: couch-profile
+    container_name: couch-profile
+    build: 
+      dockerfile: ./configs/couchdb/Dockerfile.InitProfile
+      context: ./
+    environment:
+      HOST: couchdb:5984
+      COUCHDB_USER: admin
+      COUCHDB_PASSWORD: admin
+    volumes:
+      - ./configs/couchdb/profiles/:/profiles
+    depends_on:
+      couchdb:
+        condition: service_healthy
+    networks:
+      - locker-net
 
 networks:
   locker-net:

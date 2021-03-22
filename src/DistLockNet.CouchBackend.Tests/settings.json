@@ -1,0 +1,12 @@
+{
+  "Locker": {
+    "ApplicationId": "myApp",
+    "TimeOutSeconds": 6,
+    "MissedHeartBeatCountBeforeExpire": 3
+  },
+  "CouchDB": {
+    "Url": "http://localhost:5984",
+    "UserName": "admin",
+    "Password": "admin"
+  }
+}
