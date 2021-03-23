@@ -26,10 +26,10 @@ jobs:
         dotnet-version: 3.1.100
     
     - name: Build
-      run: dotnet build ./src/DistLockNet/DistLockNet.sln --configuration Release
+      run: dotnet build ./src/DistLockNet.sln --configuration Release
     
     - name: Test
-      run: dotnet test ./src/DistLockNet/DistLockNet.sln
+      run: dotnet test ./src/DistLockNet.sln
       
     - name: Pack
       run: |
