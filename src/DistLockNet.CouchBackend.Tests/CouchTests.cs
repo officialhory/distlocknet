@@ -17,7 +17,7 @@ namespace DistLockNet.CouchBackend.Tests
     public class CouchTests
     {
         private readonly IConfiguration _config;
-        private readonly CouchConfig _couchConfig;
+        private readonly ICouchConfig _couchConfig;
         private readonly Mock<ILogger> _logger;
         private readonly AutoResetEvent _aq = new AutoResetEvent(false);
 
@@ -109,11 +109,11 @@ namespace DistLockNet.CouchBackend.Tests
         private void EmptyCouchDb()
         {
             using var client = new HttpClient();
-            var byteArray = Encoding.UTF8.GetBytes($"{_config["CouchDB:UserName"]}:{_config["CouchDB:Password"]}");
+            var byteArray = Encoding.UTF8.GetBytes($"{_couchConfig.UserName}:{_couchConfig.Password}");
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
-            var del = client.DeleteAsync($"{_config["CouchDB:Url"]}/lock").Result;
+            var del = client.DeleteAsync($"{_couchConfig.Url}/{_couchConfig.DbName}").Result;
 
-            var put = client.PutAsync($"{_config["CouchDB:Url"]}/lock", null).Result;
+            var put = client.PutAsync($"{_couchConfig.Url}/{_couchConfig.DbName}", null).Result;
         }
     }
 }

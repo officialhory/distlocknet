@@ -1,6 +1,8 @@
-﻿namespace DistLockNet.CouchBackend.Model
+﻿using DistLockNet.CouchBackend.Model;
+
+namespace DistLockNet.CouchBackend.Tests
 {
-    public class CouchConfig
+    public class CouchConfig : ICouchConfig
     {
         public string Url { get; }
         public string DbName { get; }

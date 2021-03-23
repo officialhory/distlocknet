@@ -14,10 +14,10 @@ namespace DistLockNet.CouchBackend
 {
     public class CouchBackend : ILockingBnd
     {
-        private readonly CouchConfig _config;
+        private readonly ICouchConfig _config;
         private readonly ILogger _logger;
 
-        public CouchBackend(CouchConfig config, ILogger logger)
+        public CouchBackend(ICouchConfig config, ILogger logger)
         {
             _config = config;
             _logger = logger;
