@@ -24,6 +24,7 @@ namespace DistLockNet.SqlBackend
 
         public async Task<LockingObject> GetAsync(string application, CancellationToken ct)
         {
+            _logger.Verbose("Trying to get LockingObject for application: {Application}", application);
             try
             {
                 LockingObjectEntity loe = null;
@@ -32,11 +33,12 @@ namespace DistLockNet.SqlBackend
                     loe = await context.Set<LockingObjectEntity>().Where(i => i.AppId == application).FirstOrDefaultAsync(ct);
                 }, ct);
 
-
+                _logger.Verbose("Successfully get LockingObject for application: {Application}", application);
                 return loe == null ? null : new LockingObject(loe.AppId, loe.LockerId, loe.Seed);
             }
-            catch
+            catch (System.Exception e)
             {
+                _logger.Verbose(e, "Error during getting LockingObject.");
                 return null;
             }
 
@@ -44,6 +46,7 @@ namespace DistLockNet.SqlBackend
 
         public async Task<bool> AddAsync(LockingObject lo, CancellationToken ct)
         {
+            _logger.Verbose("Trying to add LockingObject for application: {Application}", lo.AppId);
             try
             {
                 await ExecuteTransactionAsync(async context =>
@@ -57,21 +60,25 @@ namespace DistLockNet.SqlBackend
 
                 }, ct);
 
+                _logger.Verbose("Successfully add LockingObject for application: {Application}", lo.AppId);
                 return true;
             }
-            catch
+            catch (System.Exception e)
             {
+                _logger.Verbose(e, "Error during adding LockingObject.");
                 return false;
             }
         }
 
         public async Task<bool> AllocateAsync(LockingObject lo, CancellationToken ct)
         {
+            _logger.Verbose("Trying to allocate LockingObject for application: {Application}", lo.AppId);
             return await ModifyAsync(lo, x => x.AppId == lo.AppId, ct);
         }
 
         public async Task<bool> UpdateAsync(LockingObject lo, CancellationToken ct)
         {
+            _logger.Verbose("Trying to update LockingObject for application: {Application}", lo.AppId);
             return await ModifyAsync(lo, x => x.AppId == lo.AppId && x.LockerId == lo.LockerId, ct);
         }
 
@@ -85,17 +92,19 @@ namespace DistLockNet.SqlBackend
                     var loe = await context.Set<LockingObjectEntity>().Where(predicate).FirstOrDefaultAsync(ct);
                     if (loe == null)
                     {
-                        throw new SqlBackendException($"LockingObjectEntity does not exist: {lo.AppId}, {lo.LockerId}");
+                        throw new SqlBackendException($"LockingObjectEntity does not exist for application: {lo.AppId}, with LockerId: {lo.LockerId}");
                     }
 
                     loe.LockerId = lo.LockerId;
                     loe.Seed = lo.Seed;
                 }, ct);
 
+                _logger.Verbose("Successfully modify LockingObject for application: {Application}", lo.AppId);
                 return true;
             }
-            catch
+            catch (System.Exception e)
             {
+                _logger.Verbose(e, "Error during updating LockingObject.");
                 return false;
             }
         }
