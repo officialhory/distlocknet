@@ -64,24 +64,6 @@ services:
       timeout: 5s
       retries: 15
 
-  couch-profile:
-    image: couch-profile
-    container_name: couch-profile
-    build: 
-      dockerfile: ./configs/couchdb/Dockerfile.InitProfile
-      context: ./
-    environment:
-      HOST: couchdb:5984
-      COUCHDB_USER: admin
-      COUCHDB_PASSWORD: admin
-    volumes:
-      - ./configs/couchdb/profiles/:/profiles
-    depends_on:
-      couchdb:
-        condition: service_healthy
-    networks:
-      - locker-net
-
 networks:
   locker-net:
     name: locker-net

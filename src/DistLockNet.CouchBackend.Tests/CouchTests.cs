@@ -26,7 +26,7 @@ namespace DistLockNet.CouchBackend.Tests
             _config = new ConfigurationBuilder()
                 .SetBasePath(Path.GetDirectoryName(Uri.UnescapeDataString((new UriBuilder(Assembly.GetExecutingAssembly().CodeBase)).Path)))
                 .AddJsonFile("settings.json", optional: true, reloadOnChange: true).Build();
-            _couchConfig = new CouchConfig("http://localhost:5984", "admin", "admin");
+            _couchConfig = new CouchConfig("http://localhost:5984", "lock", "admin", "admin");
             _logger = new Mock<ILogger>();
         }
 
@@ -109,7 +109,7 @@ namespace DistLockNet.CouchBackend.Tests
         private void EmptyCouchDb()
         {
             using var client = new HttpClient();
-            var byteArray = Encoding.ASCII.GetBytes($"{_config["CouchDB:UserName"]}:{_config["CouchDB:Password"]}");
+            var byteArray = Encoding.UTF8.GetBytes($"{_config["CouchDB:UserName"]}:{_config["CouchDB:Password"]}");
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
             var del = client.DeleteAsync($"{_config["CouchDB:Url"]}/lock").Result;
 

@@ -30,7 +30,7 @@ namespace DistLockNet.CouchBackend
             {
                 using var client = new HttpClient();
                 DoAuth(client);
-                var response = await client.GetAsync($"{_config.Url}/lock/{application}", ct);
+                var response = await client.GetAsync($"{_config.Url}/{_config.DbName}/{application}", ct);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -57,7 +57,7 @@ namespace DistLockNet.CouchBackend
                 using var client = new HttpClient();
                 DoAuth(client);
                 var body = new StringContent(JsonConvert.SerializeObject(lo));
-                var response = await client.PutAsync($"{_config.Url}/lock/{lo.AppId}", body, ct);
+                var response = await client.PutAsync($"{_config.Url}/{_config.DbName}/{lo.AppId}", body, ct);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -92,11 +92,11 @@ namespace DistLockNet.CouchBackend
             {
                 using var client = new HttpClient();
                 DoAuth(client);
-                var response = await client.GetAsync($"{_config.Url}/lock/{lo.AppId}", ct);
+                var response = await client.GetAsync($"{_config.Url}/{_config.DbName}/{lo.AppId}", ct);
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    throw new CouchBackendException((int) response.StatusCode,
+                    throw new CouchBackendException((int)response.StatusCode,
                         "Cannot get LockingObject. Reason: " + response.Content);
                 }
 
@@ -113,11 +113,11 @@ namespace DistLockNet.CouchBackend
                 entity.Seed = lo.Seed;
 
                 var body = new StringContent(JsonConvert.SerializeObject(entity));
-                response = await client.PutAsync($"{_config.Url}/lock/{entity.AppId}", body, ct);
+                response = await client.PutAsync($"{_config.Url}/{_config.DbName}/{entity.AppId}", body, ct);
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    throw new CouchBackendException((int) response.StatusCode,
+                    throw new CouchBackendException((int)response.StatusCode,
                         "Cannot modify LockingObject. Reason: " + response.Content);
                 }
 
@@ -138,7 +138,7 @@ namespace DistLockNet.CouchBackend
                 return;
             }
 
-            var byteArray = Encoding.ASCII.GetBytes($"{_config.UserName}:{_config.Password}");
+            var byteArray = Encoding.UTF8.GetBytes($"{_config.UserName}:{_config.Password}");
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
         }
     }
