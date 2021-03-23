@@ -41,6 +41,28 @@ services:
       - 5050:80
     networks:
       - locker-net
+  
+  couchdb:
+    image: couchdb
+    container_name: couchdb
+    build: ./configs/couchdb
+    environment:
+      COUCHDB_USER: admin
+      COUCHDB_PASSWORD: admin
+    ports:
+      - "5984:5984"
+      - "5986:5986"
+    networks:
+      - locker-net
+    cap_add:
+      - SYS_NICE
+      - SYS_RESOURCE
+    restart: on-failure
+    healthcheck:
+      test: curl http://localhost:5984/_up > /dev/null
+      interval: 10s
+      timeout: 5s
+      retries: 15
 
 networks:
   locker-net:

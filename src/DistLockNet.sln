@@ -13,6 +13,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistLockNet.UnitTest", "Dis
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistLockNet.SqlBackend.Tests", "DistLockNet.SqlBackend.Tests\DistLockNet.SqlBackend.Tests.csproj", "{F2179048-6443-4A02-B0AF-7FBBB722F3EE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DistLockNet.CouchBackend", "DistLockNet.CouchBackend\DistLockNet.CouchBackend.csproj", "{A9212C5F-7A9F-4EF9-9B79-91E631313781}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DistLockNet.CouchBackend.Tests", "DistLockNet.CouchBackend.Tests\DistLockNet.CouchBackend.Tests.csproj", "{B9D795D8-ABFB-49C4-9D4F-F37900CF6D54}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +43,14 @@ Global
 		{F2179048-6443-4A02-B0AF-7FBBB722F3EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F2179048-6443-4A02-B0AF-7FBBB722F3EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F2179048-6443-4A02-B0AF-7FBBB722F3EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A9212C5F-7A9F-4EF9-9B79-91E631313781}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9212C5F-7A9F-4EF9-9B79-91E631313781}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9212C5F-7A9F-4EF9-9B79-91E631313781}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9212C5F-7A9F-4EF9-9B79-91E631313781}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B9D795D8-ABFB-49C4-9D4F-F37900CF6D54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9D795D8-ABFB-49C4-9D4F-F37900CF6D54}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9D795D8-ABFB-49C4-9D4F-F37900CF6D54}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9D795D8-ABFB-49C4-9D4F-F37900CF6D54}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,0 +1,7 @@
+{
+  "Locker": {
+    "ApplicationId": "myApp",
+    "TimeOutSeconds": 6,
+    "MissedHeartBeatCountBeforeExpire": 3
+  }
+}

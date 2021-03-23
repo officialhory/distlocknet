@@ -1,43 +1,42 @@
+﻿using DistLockNet.CouchBackend.Model;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Moq;
+using Polly;
 using Serilog;
 using System;
 using System.IO;
+using System.Net.Http;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using Xunit;
 
-namespace DistLockNet.SqlBackend.Tests
+namespace DistLockNet.CouchBackend.Tests
 {
-    public class SqliteTests
+    public class CouchTests
     {
         private readonly IConfiguration _config;
-
+        private readonly ICouchConfig _couchConfig;
         private readonly Mock<ILogger> _logger;
-
         private readonly AutoResetEvent _aq = new AutoResetEvent(false);
-        private readonly DataProviderSelector _dataProviderSelector;
-        private readonly DbContextFactory _dbContextFactory;
 
-        public SqliteTests()
+        public CouchTests()
         {
             _config = new ConfigurationBuilder()
                 .SetBasePath(Path.GetDirectoryName(Uri.UnescapeDataString((new UriBuilder(Assembly.GetExecutingAssembly().CodeBase)).Path)))
                 .AddJsonFile("settings.json", optional: true, reloadOnChange: true).Build();
-
+            _couchConfig = new CouchConfig("http://localhost:5984", "lock", "admin", "admin");
             _logger = new Mock<ILogger>();
-
-            _dataProviderSelector = new DataProviderSelector(_config);
-            _dbContextFactory = new DbContextFactory(_dataProviderSelector);
         }
 
         [Fact]
         public void NoLockDB_SetNewLocker_LockAcquiredSuccessfully()
         {
+            EmptyCouchDb();
             var lockAq = 0;
 
-            var bnd = new SqlBackend(_dbContextFactory, _logger.Object);
+            var bnd = new CouchBackend(_couchConfig, _logger.Object);
 
             var locker = new Locker(_config, bnd, _logger.Object)
             {
@@ -59,7 +58,8 @@ namespace DistLockNet.SqlBackend.Tests
         [Fact]
         public void LockSetInDb_SetAnotherLocker_LockAcquireFailed()
         {
-            var bnd0 = new SqlBackend(_dbContextFactory, _logger.Object);
+            EmptyCouchDb();
+            var bnd0 = new CouchBackend(_couchConfig, _logger.Object);
             var lockAq = 0;
             var lockWait = 0;
 
@@ -76,7 +76,7 @@ namespace DistLockNet.SqlBackend.Tests
                 }
             };
 
-            var bnd1 = new SqlBackend(_dbContextFactory, _logger.Object);
+            var bnd1 = new CouchBackend(_couchConfig, _logger.Object);
             var locker1 = new Locker(_config, bnd1, _logger.Object)
             {
                 OnLockAcquired = (str) =>
@@ -91,13 +91,29 @@ namespace DistLockNet.SqlBackend.Tests
             };
 
             locker0.Lock();
+
             _aq.WaitOne(6000);
+
             locker1.Lock();
+
+            var war = Policy.Handle<System.Exception>().WaitAndRetry(100, i => TimeSpan.FromMilliseconds(100));
+            war.Execute(() => { if (lockWait < 2) { throw new System.Exception(); } });
+
             locker0.Halt();
             locker1.Halt();
 
             lockAq.Should().Be(1);
             lockWait.Should().Be(2);
+        }
+
+        private void EmptyCouchDb()
+        {
+            using var client = new HttpClient();
+            var byteArray = Encoding.UTF8.GetBytes($"{_couchConfig.UserName}:{_couchConfig.Password}");
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+            var del = client.DeleteAsync($"{_couchConfig.Url}/{_couchConfig.DbName}").Result;
+
+            var put = client.PutAsync($"{_couchConfig.Url}/{_couchConfig.DbName}", null).Result;
         }
     }
 }
