@@ -5,8 +5,6 @@ using DistLockNet.Models;
 using Newtonsoft.Json;
 using Serilog;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
@@ -79,16 +77,16 @@ namespace DistLockNet.CouchBackend
         public async Task<bool> AllocateAsync(LockingObject lo, CancellationToken ct)
         {
             _logger.Verbose("Trying to allocate LockingObject for application: {Application}", lo.AppId);
-            return await ModifyAsync(lo, x => x.AppId == lo.AppId, ct);
+            return await ModifyAsync(lo, false, ct);
         }
 
         public async Task<bool> UpdateAsync(LockingObject lo, CancellationToken ct)
         {
             _logger.Verbose("Trying to update LockingObject for application: {Application}", lo.AppId);
-            return await ModifyAsync(lo, x => x.AppId == lo.AppId && x.LockerId == lo.LockerId, ct);
+            return await ModifyAsync(lo, true, ct);
         }
 
-        private async Task<bool> ModifyAsync(LockingObject lo, Func<LockingObjectEntity, bool> predicate, CancellationToken ct)
+        private async Task<bool> ModifyAsync(LockingObject lo, bool doCheckLocker, CancellationToken ct)
         {
             try
             {
@@ -96,32 +94,35 @@ namespace DistLockNet.CouchBackend
                 DoAuth(client);
                 var response = await client.GetAsync($"{_config.Url}/lock/{lo.AppId}", ct);
 
-                if (response.IsSuccessStatusCode)
+                if (!response.IsSuccessStatusCode)
                 {
-                    _logger.Verbose("Successfully get LockingObject for application: {Application}", lo.AppId);
-                    var content = await response.Content.ReadAsStringAsync();
-                    var savedEntities = JsonConvert.DeserializeObject<IList<LockingObjectEntity>>(content);
-
-                    if (savedEntities != null && savedEntities.Any())
-                    {
-                        var lockingObject = savedEntities.First(predicate);
-                        lockingObject.LockerId = lo.LockerId;
-                        lockingObject.Seed = lo.Seed;
-
-                        var body = new StringContent(JsonConvert.SerializeObject(lockingObject));
-                        var putResponse = await client.PutAsync($"{_config.Url}/lock/{lockingObject.AppId}", body, ct);
-
-                        if (putResponse.IsSuccessStatusCode)
-                        {
-                            _logger.Verbose("Successfully modify LockingObject for application: {Application}", lo.AppId);
-                            return true;
-                        }
-
-                        throw new CouchBackendException((int)response.StatusCode, "Cannot modify LockingObject. Reason: " + response.Content);
-                    }
+                    throw new CouchBackendException((int) response.StatusCode,
+                        "Cannot get LockingObject. Reason: " + response.Content);
                 }
 
-                throw new CouchBackendException((int)response.StatusCode, "Cannot get LockingObject. Reason: " + response.Content);
+                _logger.Verbose("Successfully get LockingObject for application: {Application}", lo.AppId);
+                var content = await response.Content.ReadAsStringAsync();
+                var entity = JsonConvert.DeserializeObject<LockingObjectEntity>(content);
+
+                if (doCheckLocker && entity.LockerId != lo.LockerId)
+                {
+                    return false;
+                }
+
+                entity.LockerId = lo.LockerId;
+                entity.Seed = lo.Seed;
+
+                var body = new StringContent(JsonConvert.SerializeObject(entity));
+                response = await client.PutAsync($"{_config.Url}/lock/{entity.AppId}", body, ct);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new CouchBackendException((int) response.StatusCode,
+                        "Cannot modify LockingObject. Reason: " + response.Content);
+                }
+
+                _logger.Verbose("Successfully modify LockingObject for application: {Application}", lo.AppId);
+                return true;
             }
             catch (CouchBackendException e)
             {
