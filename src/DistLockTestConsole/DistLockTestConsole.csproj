@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DistLockNet.CouchBackend\DistLockNet.CouchBackend.csproj" />
     <ProjectReference Include="..\DistLockNet.SqlBackend\DistLockNet.SqlBackend.csproj" />
     <ProjectReference Include="..\DistLockNet\DistLockNet.csproj" />
   </ItemGroup>
